@@ -5,6 +5,8 @@ import java.util.Iterator;
 
 import com.sun.jna.Pointer;
 
+import static org.libelektra.Key.printKeyAndMeta;
+
 /**
  * A keyset holds together a set of keys.
  */
@@ -372,5 +374,15 @@ public class KeySet implements Iterable<Key> {
 	 */
 	protected Pointer get() {
 		return ks;
+	}
+
+
+	/******************************** Helpers *******************************/
+	public static void printKeySet(KeySet set) {
+		System.out.println("*======== KeySet Information ========*");
+		for (int i = 0; i < set.length(); i++) {  //Traverse the set
+			printKeyAndMeta(set.at(i));
+		}
+		System.out.println("*====================================*");
 	}
 }

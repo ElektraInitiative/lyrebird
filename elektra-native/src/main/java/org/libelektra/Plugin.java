@@ -97,6 +97,28 @@ public class Plugin {
             return list;
         }
     }
+
+    public enum AvailableSpecificationPlugins {
+        PATH("path"),
+        ENUM("enum"),
+        NETWORK("network"),
+        TYPE("type"),
+        CONDITIONALS("conditionals"),
+        BOOLEAN("boolean"),
+        VALIDATION("validation"),
+        RANGE("range");
+
+        private final String pluginName;
+
+        AvailableSpecificationPlugins(String pluginName) {
+            this.pluginName = pluginName;
+        }
+
+        public String getPluginName() {
+            return pluginName;
+        }
+    }
+
 }
 
 

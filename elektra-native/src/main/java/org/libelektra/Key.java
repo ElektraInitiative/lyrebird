@@ -2,6 +2,8 @@ package org.libelektra;
 
 import com.sun.jna.Pointer;
 
+import static java.util.Objects.nonNull;
+
 /**
  * Key is an essential class that encapsulates key name , value and metainfo.
  */
@@ -727,7 +729,8 @@ public class Key implements Iterable<String> {
 	 */
 	public String getString() throws KeyTypeMismatch {
 		if (isBinary()) {
-			throw new KeyTypeMismatch();
+			return "BINARY!!!";
+//			throw new KeyTypeMismatch();
 		}
 		return Elektra.INSTANCE.keyString(key);
 	}
@@ -750,5 +753,23 @@ public class Key implements Iterable<String> {
 	 */
 	protected Pointer get() {
 		return key;
+	}
+
+
+	/******************************** Helpers *******************************/
+	public static void printKeyAndMeta(Key key) {
+		key.rewindMeta();
+		String keyAndValue = String.format("%s: %s",
+				key.getName(),          //Fetch the key's name
+				key.getString());       //Fetch the key's value
+		System.out.println(keyAndValue);
+		Key currentKey = key.currentMeta();
+		while (nonNull(currentKey.getName())) {
+			String metaKeyAndValue = String.format("\tMeta [%s: %s]",
+					currentKey.getName(),          //Fetch the key's name
+					currentKey.getString());       //Fetch the key's value
+			System.out.println(metaKeyAndValue);
+			currentKey = key.nextMeta();
+		}
 	}
 }
