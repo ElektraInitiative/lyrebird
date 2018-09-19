@@ -9,9 +9,7 @@ import org.libelektra.lyrebird.runner.impl.LCDprocRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Iterator;
 
 public class Main {
@@ -39,7 +37,7 @@ public class Main {
             setUpEnumTst(kdb);
             kdb.get(set, key);
 
-            Plugin plugin = new Plugin(Plugin.AvailableSpecificationPlugins.ENUM.getPluginName(), key);
+            Plugin plugin = new Plugin(Plugin.SpecPlugins.ENUM.getPluginName(), key);
             int resultCode = plugin.kdbSet(set, key);
             logResult(resultCode);
 
@@ -58,17 +56,6 @@ public class Main {
             }
         }
         return result;
-    }
-
-    public static KeySet removeAllKeysStartingWith(KeySet set, String startKey) {
-        Iterator<Key> iterator = set.iterator();
-        while (iterator.hasNext()) {
-            Key current = iterator.next();
-            if (current.getName().startsWith(startKey)) {
-                iterator.remove();
-            }
-        }
-        return set;
     }
 
     public static void setUpEnumTst(KDB kdb) throws KDB.KDBException {

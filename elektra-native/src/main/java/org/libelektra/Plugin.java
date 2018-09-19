@@ -98,7 +98,7 @@ public class Plugin {
         }
     }
 
-    public enum AvailableSpecificationPlugins {
+    public enum SpecPlugins {
         PATH("path"),
         ENUM("enum"),
         NETWORK("network"),
@@ -110,7 +110,7 @@ public class Plugin {
 
         private final String pluginName;
 
-        AvailableSpecificationPlugins(String pluginName) {
+        SpecPlugins(String pluginName) {
             this.pluginName = pluginName;
         }
 

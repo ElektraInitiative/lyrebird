@@ -4,11 +4,12 @@
     <artifactId>elektra-all</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
-    <name>multi</name>
+    <name>root</name>
 
     <modules>
         <module>elektra-native</module>
         <module>lyrebird</module>
+        <module>injection-plugin</module>
     </modules>
 
     <properties>
