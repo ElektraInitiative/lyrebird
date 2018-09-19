@@ -4,6 +4,8 @@ import com.sun.jna.Pointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
+
 import static java.util.Objects.nonNull;
 
 /**
@@ -758,8 +760,22 @@ public class Key implements Iterable<String> {
 		return key;
 	}
 
-
 	/******************************** Helpers *******************************/
+	//TODO: Implement it the native way, I do now know how to do it
+	public Key removeMetaIfPresent(String metaName) {
+		Key newKey = Key.create(this.getName(), this.getString());
+		rewindMeta();
+		Key currentMetaKey = currentMeta();
+		while (nonNull(currentMetaKey.getName())) {
+			if (!currentMetaKey.getName().equals(metaName)) {
+				newKey.setMeta(currentMetaKey.getName(), currentMetaKey.getString());
+			}
+			currentMetaKey = currentMetaKey.nextMeta();
+		}
+		return newKey;
+	}
+
+
 	public static void printKeyAndMeta(Key key) {
 		key.rewindMeta();
 		String keyAndValue = String.format("%s: %s",
@@ -775,4 +791,5 @@ public class Key implements Iterable<String> {
 			currentKey = key.nextMeta();
 		}
 	}
+
 }

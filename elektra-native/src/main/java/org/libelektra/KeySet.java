@@ -383,6 +383,7 @@ public class KeySet implements Iterable<Key> {
 
 	/******************************** Helpers *******************************/
 	public static void printKeySet(KeySet set) {
+		set.rewind();
 		LOG.info("*======== KeySet Information ========*");
 		for (int i = 0; i < set.length(); i++) {  //Traverse the set
 			printKeyAndMeta(set.at(i));

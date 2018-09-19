@@ -6,14 +6,14 @@ public class RandomizerSingelton {
 
     private static Randomizer instance;
 
-    private static Randomizer getInstance() {
+    public static Randomizer getInstance() {
         if (RandomizerSingelton.instance == null) {
             RandomizerSingelton.instance = new Randomizer();
         }
         return RandomizerSingelton.instance;
     }
 
-    private static Randomizer getInstance(int seed) {
+    public static Randomizer getInstance(int seed) {
         if (RandomizerSingelton.instance == null) {
             RandomizerSingelton.instance = new Randomizer(seed);
         }
@@ -24,14 +24,14 @@ public class RandomizerSingelton {
     }
 
 
-    private static class Randomizer {
+    public static class Randomizer {
         private final Random randomizer;
 
-        public Randomizer(int seed) {
+        private Randomizer(int seed) {
             randomizer = new Random(seed);
         }
 
-        public Randomizer() {
+        private Randomizer() {
             randomizer = new Random();
         }
 

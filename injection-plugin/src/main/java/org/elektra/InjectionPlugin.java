@@ -13,16 +13,18 @@ import static java.util.Objects.nonNull;
 
 public class InjectionPlugin {
 
+    public static final String SEED_META ="inject/randSeed";
+
     private final static Logger LOG = LoggerFactory.getLogger(InjectionPlugin.class);
 
     private static String name = "injection";
-    public static Key ROOT_KEY = Key.create("user");
+    public static Key ROOT_KEY = Key.create("user/injection/test");
     public KDB kdb;
 
     private final StructureError structureError = new StructureError();
 
     public InjectionPlugin() {
-       kdb = KDB.open(ROOT_KEY);
+        kdb = KDB.open(ROOT_KEY);
     }
 
     public InjectionPlugin(String pluginName, Key errorKey) {
@@ -87,6 +89,17 @@ public class InjectionPlugin {
             currentKey = key.nextMeta();
         }
         return false;
+    }
+
+    public static boolean hasSeedSet(Key key) {
+        return nonNull(key.getMeta(SEED_META).getName());
+    }
+
+    public static int getSeedFromMeta(Key key) {
+        if (hasSeedSet(key)) {
+            return key.getMeta(SEED_META).getInteger();
+        }
+        return 0;
     }
 
 }
