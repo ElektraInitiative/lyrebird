@@ -1,5 +1,6 @@
-package org.libelektra;
+package org.libelektra.util;
 
+import org.libelektra.Key;
 import org.libelektra.Key.KeyTypeConversion;
 
 public final class KeyUtils {

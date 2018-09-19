@@ -1,6 +1,8 @@
 package org.libelektra;
 
 import com.sun.jna.Pointer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static java.util.Objects.nonNull;
 
@@ -9,6 +11,7 @@ import static java.util.Objects.nonNull;
  */
 public class Key implements Iterable<String> {
 
+	private final static Logger LOG = LoggerFactory.getLogger(Key.class);
 	private static final String WARNINGS = "warnings";
 	// constants
 	public static final int KEY_END = 0;
@@ -762,13 +765,13 @@ public class Key implements Iterable<String> {
 		String keyAndValue = String.format("%s: %s",
 				key.getName(),          //Fetch the key's name
 				key.getString());       //Fetch the key's value
-		System.out.println(keyAndValue);
+		LOG.info(keyAndValue);
 		Key currentKey = key.currentMeta();
 		while (nonNull(currentKey.getName())) {
 			String metaKeyAndValue = String.format("\tMeta [%s: %s]",
 					currentKey.getName(),          //Fetch the key's name
 					currentKey.getString());       //Fetch the key's value
-			System.out.println(metaKeyAndValue);
+			LOG.info(metaKeyAndValue);
 			currentKey = key.nextMeta();
 		}
 	}

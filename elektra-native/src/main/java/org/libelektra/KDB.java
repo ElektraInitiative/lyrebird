@@ -1,6 +1,7 @@
 package org.libelektra;
 
 import com.sun.jna.Pointer;
+import org.libelektra.util.KeyUtils;
 
 /**
  * Represents session with the Key database. Close after usage, or simply use a try-with-resources statement.

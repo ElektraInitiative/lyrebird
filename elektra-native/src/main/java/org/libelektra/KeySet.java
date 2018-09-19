@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import com.sun.jna.Pointer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.libelektra.Key.printKeyAndMeta;
 
@@ -11,6 +13,8 @@ import static org.libelektra.Key.printKeyAndMeta;
  * A keyset holds together a set of keys.
  */
 public class KeySet implements Iterable<Key> {
+
+	private final static Logger LOG = LoggerFactory.getLogger(KeySet.class);
 
 	// constants
 	public static final int KDB_O_NONE = 0;
@@ -379,10 +383,10 @@ public class KeySet implements Iterable<Key> {
 
 	/******************************** Helpers *******************************/
 	public static void printKeySet(KeySet set) {
-		System.out.println("*======== KeySet Information ========*");
+		LOG.info("*======== KeySet Information ========*");
 		for (int i = 0; i < set.length(); i++) {  //Traverse the set
 			printKeyAndMeta(set.at(i));
 		}
-		System.out.println("*====================================*");
+		LOG.info("*====================================*");
 	}
 }

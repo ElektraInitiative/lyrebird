@@ -4,10 +4,19 @@ import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.libelektra.Plugin;
+import org.libelektra.lyrebird.runner.ApplicationRunner;
+import org.libelektra.lyrebird.runner.impl.LCDprocRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Iterator;
 
 public class Main {
+
+    private final static Logger LOG = LoggerFactory.getLogger(Main.class);
 
     static {
         System.setProperty("jna.library.path", "/usr/local/lib");
@@ -15,7 +24,14 @@ public class Main {
 
     static String ROOT = "user";
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException, InterruptedException {
+        ApplicationRunner runner = new LCDprocRunner();
+        runner.start();
+        runner.stop();
+//        mainRun();
+    }
+
+    private static void mainRun() {
         Key key = Key.create(ROOT);
         KeySet set = KeySet.create();
         try (KDB kdb = KDB.open(key)) {
@@ -25,17 +41,10 @@ public class Main {
 
             Plugin plugin = new Plugin(Plugin.AvailableSpecificationPlugins.ENUM.getPluginName(), key);
             int resultCode = plugin.kdbSet(set, key);
-            System.out.println("Returned Error Code: " + resultCode);
+            logResult(resultCode);
 
             KeySet.printKeySet(set);
             Key.printKeyAndMeta(key);
-
-//            KeySet newSet = removeAllKeysStartingWith(set, "system/sw");
-//            kdb.set(newSet, key);
-
-//            printKS(newSet);
-
-
         } catch (KDB.KDBException e) {
             e.printStackTrace();
         }
@@ -71,6 +80,14 @@ public class Main {
         k.setMeta("check/enum", "a, b, c");
         set.append(k);
         kdb.set(set, key);
+    }
+
+    private static void logResult(int returncode) {
+        if (returncode < 0) {
+            LOG.error("Returned Error Code: {}", returncode);
+        } else {
+            LOG.info("Returned Error Code: {}", returncode);
+        }
     }
 
 }
