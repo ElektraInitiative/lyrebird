@@ -775,19 +775,18 @@ public class Key implements Iterable<String> {
 		return newKey;
 	}
 
-
+	//DO NOT!!!!! change this to a `toString()` method as JNA integrations work with pointers and
+	// totally f*** up with Strings. You could break the whole plugin.
 	public static void printKeyAndMeta(Key key) {
 		key.rewindMeta();
-		String keyAndValue = String.format("%s: %s",
+		LOG.debug("{}: {}",
 				key.getName(),          //Fetch the key's name
-				key.getString());       //Fetch the key's value
-		LOG.info(keyAndValue);
+				key.getString());       //Fetch the key's value);
 		Key currentKey = key.currentMeta();
 		while (nonNull(currentKey.getName())) {
-			String metaKeyAndValue = String.format("\tMeta [%s: %s]",
+			LOG.debug("\tMeta [{}: {}]",
 					currentKey.getName(),          //Fetch the key's name
-					currentKey.getString());       //Fetch the key's value
-			LOG.info(metaKeyAndValue);
+					currentKey.getString());       //Fetch the key's value);
 			currentKey = key.nextMeta();
 		}
 	}

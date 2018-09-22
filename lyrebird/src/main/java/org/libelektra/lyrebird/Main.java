@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 public class Main {
 
@@ -41,7 +40,7 @@ public class Main {
             int resultCode = plugin.kdbSet(set, key);
             logResult(resultCode);
 
-            KeySet.printKeySet(set);
+            KeySet.toString(set);
             Key.printKeyAndMeta(key);
         } catch (KDB.KDBException e) {
             e.printStackTrace();

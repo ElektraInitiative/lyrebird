@@ -2,13 +2,11 @@ package org.elektra;
 
 import org.elektra.errortypes.StructureError;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
-import org.libelektra.util.RandomizerSingelton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,14 +15,14 @@ import java.util.Iterator;
 import static org.elektra.InjectionPlugin.ROOT_KEY;
 import static org.elektra.InjectionPlugin.getSeedFromMeta;
 import static org.elektra.InjectionPlugin.hasSeedSet;
+import static org.elektra.errortypes.StructureError.Metadata.SECTION_DUPLICATE;
 import static org.elektra.errortypes.StructureError.Metadata.SECTION_REALLOCATE;
 import static org.elektra.errortypes.StructureError.Metadata.SECTION_REMOVE;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.libelektra.KeySet.printKeySet;
 
-class InjectionPluginTest {
+class StructureErrorTest {
 
-    private final static Logger LOG = LoggerFactory.getLogger(InjectionPluginTest.class);
+    private final static Logger LOG = LoggerFactory.getLogger(StructureErrorTest.class);
 
     private InjectionPlugin injectionPlugin;
     private KDB kdb;
@@ -74,10 +72,12 @@ class InjectionPluginTest {
         loadedKeySet.append(key4);
         loadedKeySet.append(key5);
 
-        assertNotNull(loadedKeySet.lookup("user/a/b1/c1").getName());
+        KeySet.printKeySet(loadedKeySet);
+        assertNotNull(loadedKeySet.lookup(ROOT_KEY+"/a/b1/c1").getName());
         kdb.set(loadedKeySet, ROOT_KEY);
         injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
-        assertNull(loadedKeySet.lookup("user/a/b1/c1").getName());
+        assertNull(loadedKeySet.lookup(ROOT_KEY+"/a/b1/c1").getName());
+        KeySet.printKeySet(loadedKeySet);
     }
 
     @Test
@@ -85,7 +85,7 @@ class InjectionPluginTest {
         Key key1 = Key.create(ROOT_KEY +"/a", "a");
         Key key2 = Key.create(ROOT_KEY +"/a/b1", "b1");
         key2.setMeta(SECTION_REALLOCATE.getMetadata(), "");
-        key2.setMeta(InjectionPlugin.SEED_META, "410");
+        key2.setMeta(InjectionPlugin.SEED_META, "411");
         Key key3 = Key.create(ROOT_KEY +"/a/b2", "b2");
         Key key4 = Key.create(ROOT_KEY +"/a/b1/c1", "c1");
         Key key5 = Key.create(ROOT_KEY +"/a/b2/c2", "c2");
@@ -95,13 +95,69 @@ class InjectionPluginTest {
         loadedKeySet.append(key4);
         loadedKeySet.append(key5);
 
-//        assertNotNull(loadedKeySet.lookup("user/a/b1/c1").getName());
-        printKeySet(loadedKeySet);
+        //Check correct prerequisites
+        assertNotNull(loadedKeySet.lookup(ROOT_KEY+"/a/b1/c1").getName());
+        assertNotNull(loadedKeySet.lookup(ROOT_KEY+"/a/b1")
+                .getMeta(StructureError.Metadata.SECTION_REALLOCATE.getMetadata()).getName());
+
+        KeySet.printKeySet(loadedKeySet);
         kdb.set(loadedKeySet, ROOT_KEY);
         injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
-        printKeySet(loadedKeySet);
-//        assertNull(loadedKeySet.lookup("user/a/b1/c1").getName());
+        KeySet.printKeySet(loadedKeySet);
+
+        //This outcome is specific to the set SEED so if you changed the random number it will most likely break
+        assertNull(loadedKeySet.lookup(ROOT_KEY+"/a/b1/c1").getName(),
+                "Old section is still at the same place");
+        assertNotNull(loadedKeySet.lookup(ROOT_KEY+"/b1").getName(),
+                "Section not correctly relocated");
+        assertNull(loadedKeySet.lookup(ROOT_KEY+"/b1")
+                .getMeta(StructureError.Metadata.SECTION_REALLOCATE.getMetadata()).getName(),
+                "After section relocate the metadata has to be removed");
     }
+
+    @Test
+    public void duplicateSection_shouldWork() throws Exception {
+        Key key1 = Key.create(ROOT_KEY +"/a", "a");
+        Key key2 = Key.create(ROOT_KEY +"/a/b1", "b1");
+        key2.setMeta(SECTION_DUPLICATE.getMetadata(), "");
+        key2.setMeta(InjectionPlugin.SEED_META, "411");
+        Key key3 = Key.create(ROOT_KEY +"/a/b2", "b2");
+        Key key4 = Key.create(ROOT_KEY +"/a/b1/c1", "c1");
+        Key key5 = Key.create(ROOT_KEY +"/a/b2/c2", "c2");
+        loadedKeySet.append(key1);
+        loadedKeySet.append(key2);
+        loadedKeySet.append(key3);
+        loadedKeySet.append(key4);
+        loadedKeySet.append(key5);
+
+        //Check correct prerequisites
+        assertNotNull(loadedKeySet.lookup(ROOT_KEY+"/a/b1/c1").getName());
+        assertNotNull(loadedKeySet.lookup(ROOT_KEY+"/a/b1")
+                .getMeta(StructureError.Metadata.SECTION_DUPLICATE.getMetadata()).getName());
+
+        KeySet.printKeySet(loadedKeySet);
+        kdb.set(loadedKeySet, ROOT_KEY);
+        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
+        KeySet.printKeySet(loadedKeySet);
+
+        assertNull(loadedKeySet.lookup(ROOT_KEY+"/a/b1")
+                .getMeta(StructureError.Metadata.SECTION_DUPLICATE.getMetadata()).getName(),
+                "Metadata was not removed after execution");
+
+        //This outcome is specific to the set SEED so if you changed the random number it will most likely break
+        assertNull(loadedKeySet.lookup(ROOT_KEY+"/b1")
+                        .getMeta(StructureError.Metadata.SECTION_DUPLICATE.getMetadata()).getName(),
+                "Metadata was not removed from duplicated section");
+        assertNotNull(loadedKeySet.lookup(ROOT_KEY+"/b1/c1").getName(),
+                "Relocation of b1/c1 was not correct");
+        assertNotNull(loadedKeySet.lookup(ROOT_KEY+"/b1").getName(),
+                "Relocation of b1 was not correct");
+        assertNotNull(loadedKeySet.lookup(ROOT_KEY +"/a/b1").getName(),
+                "Duplicated section should not be removed");
+
+    }
+
+
 
     @AfterEach
     public void tearDown() throws KDB.KDBException {

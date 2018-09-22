@@ -17,7 +17,6 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
 
 import static org.libelektra.Key.printKeyAndMeta;
-import static org.libelektra.KeySet.printKeySet;
 
 class PluginTests {
 
@@ -65,7 +64,7 @@ class PluginTests {
 
             System.out.println("Returned Error Code: " + resultCode);
 
-            printKeySet(set);
+            KeySet.toString(set);
             printKeyAndMeta(key);
         } catch (KDB.KDBException e) {
             e.printStackTrace();

@@ -13,7 +13,7 @@ Configutation:
       target: SYSTEM_OUT
       PatternLayout:
         pattern: "%highlight{[%-5level]}{FATAL=red blink, ERROR=red, WARN=yellow bold, INFO=black, DEBUG=green bold, TRACE=blue}
-        %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n"
+        %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c-20{1} - %msg%n"
 
     File:
       name: File_Appender

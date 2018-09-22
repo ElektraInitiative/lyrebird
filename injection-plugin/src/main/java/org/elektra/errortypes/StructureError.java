@@ -12,7 +12,6 @@ import org.libelektra.util.RandomizerSingelton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.stream.IntStream;
 
@@ -31,6 +30,8 @@ public class StructureError {
                 return removeSection(set, key);
             } else if (currentKey.getName().equals(Metadata.SECTION_REALLOCATE.getMetadata())) {
                 return reallocateSection(set, key);
+            } else if (currentKey.getName().equals(Metadata.SECTION_DUPLICATE.getMetadata())) {
+                return duplicateSection(set, key);
             }
             currentKey = key.nextMeta();
         }
@@ -39,6 +40,12 @@ public class StructureError {
 
     private KeySet removeSection(KeySet set, Key startKey) {
         LOG.debug("Applying Structure Error [removeSection] to {}", startKey.getName());
+        removeSectionNoLogging(set, startKey);
+        LOG.debug("Removing: {} ===> REMOVE", startKey.getName());
+        return set;
+    }
+
+    private void removeSectionNoLogging(KeySet set, Key startKey) {
         Iterator<Key> iterator = set.iterator();
         while (iterator.hasNext()) {
             Key current = iterator.next();
@@ -46,7 +53,6 @@ public class StructureError {
                 iterator.remove();
             }
         }
-        return set;
     }
 
     //What a disgusting method ... but elektra forces me to do it
@@ -55,6 +61,7 @@ public class StructureError {
 
         //Remove the metadata to prohibit multiple reallocation
         key = key.removeMetaIfPresent(Metadata.SECTION_REALLOCATE.getMetadata());
+        key = key.removeMetaIfPresent(InjectionPlugin.SEED_META);
         set.append(key);
 
         Randomizer randomizer = RandomizerSingelton.getInstance();
@@ -69,26 +76,40 @@ public class StructureError {
         String toSubstitute=key.getName().substring(0, slashLocation);
 
         //Change the path of every Key and add it to a new KS
-        KeySet extractedKSwithNewRoot = KeySet.create();
-        for (Key current : extractedKS) {
-            String newPath = current.getName().replace(toSubstitute, newRoot);
-            Key tmpKey = Key.create(newPath, current.getString());
+        KeySet extractedKSwithNewRoot = changePathOfKeySet(extractedKS, toSubstitute, newRoot);
 
-            //Copy all metadata to new Key
-            key.rewindMeta();
-            Key currentMetaKey = current.currentMeta();
-            while (nonNull(currentMetaKey.getName())) {
-                tmpKey.setMeta(currentMetaKey.getName(), currentMetaKey.getString());
-                currentMetaKey = current.nextMeta();
-            }
-
-            extractedKSwithNewRoot.append(tmpKey);
-        }
-
-        String message = String.format("Reallocate \n %s ===> %s", key.getName(), newRoot);
+        String message = String.format("Reallocate %s ===> %s", key.getName(), newRoot);
         LOG.debug(message);
-        removeSection(set, key);
+        removeSectionNoLogging(set, key);
         set.append(extractedKSwithNewRoot);
+
+        return set;
+    }
+
+    private KeySet duplicateSection(KeySet set, Key key) {
+        LOG.debug("Applying Structure Error [duplicateSection] to {}", key.getName());
+
+        //Remove the metadata to prohibit multiple reallocation
+        key = key.removeMetaIfPresent(Metadata.SECTION_REALLOCATE.getMetadata());
+        key = key.removeMetaIfPresent(InjectionPlugin.SEED_META);
+        set.append(key);
+
+        Randomizer randomizer = RandomizerSingelton.getInstance();
+        if (hasSeedSet(key)) {
+            randomizer.setSeed(getSeedFromMeta(key));
+        }
+        String newRoot = findNewRoot(set, key, randomizer);
+        KeySet extractedKS = extractKeySet(set, key);
+
+        int slashLocation=key.getName().lastIndexOf("/");
+        String toSubstitute=key.getName().substring(0, slashLocation);
+
+        //Change the path of every Key and add it to a new KS
+        KeySet extractedKSwithNewRoot = changePathOfKeySet(extractedKS, toSubstitute, newRoot);
+        set.append(extractedKSwithNewRoot);
+
+        String message = String.format("Duplicate %s ===> %s", key.getName(), newRoot);
+        LOG.debug(message);
 
         return set;
     }
@@ -106,7 +127,7 @@ public class StructureError {
 
     private String findNewRoot(KeySet set, Key key, Randomizer randomizer) {
         KeySet filtered = set.dup();
-        removeSection(filtered, key);   //This should avoid reallocating yourself to yourself or a subkey
+        removeSectionNoLogging(filtered, key);   //This should avoid reallocating yourself to yourself or a subkey
         int keySetLength = filtered.length();
         Key relocatorKey = filtered.at(randomizer.getNextInt(keySetLength));
         String name = relocatorKey.getName();
@@ -124,9 +145,29 @@ public class StructureError {
         return newRoot;
     }
 
+    private KeySet changePathOfKeySet(KeySet set, String oldPathPart, String newPathPart) {
+        KeySet extractedKSwithNewRoot = KeySet.create();
+        for (Key current : set) {
+            String newPath = current.getName().replace(oldPathPart, newPathPart);
+            Key tmpKey = Key.create(newPath, current.getString());
+
+            //Copy all metadata to new Key
+            current.rewindMeta();
+            Key currentMetaKey = current.currentMeta();
+            while (nonNull(currentMetaKey.getName())) {
+                tmpKey.setMeta(currentMetaKey.getName(), currentMetaKey.getString());
+                currentMetaKey = current.nextMeta();
+            }
+
+            extractedKSwithNewRoot.append(tmpKey);
+        }
+        return extractedKSwithNewRoot;
+    }
+
     public static enum Metadata {
-        SECTION_REMOVE("inject/structure/sectionRemove"),
-        SECTION_REALLOCATE("inject/structure/sectionReallocate");
+        SECTION_REMOVE("inject/structure/section/remove"),
+        SECTION_REALLOCATE("inject/structure/section/reallocate"),
+        SECTION_DUPLICATE("inject/structure/section/duplicate");
 
         private final String metadata;
 

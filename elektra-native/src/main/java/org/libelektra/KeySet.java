@@ -382,12 +382,15 @@ public class KeySet implements Iterable<Key> {
 
 
 	/******************************** Helpers *******************************/
+
+	//DO NOT!!!!! change this to a `toString()` method as JNA integrations work with pointers and
+	// totally f*** up with Strings
 	public static void printKeySet(KeySet set) {
 		set.rewind();
-		LOG.info("*======== KeySet Information ========*");
+		LOG.debug("*======== KeySet Information ========*");
 		for (int i = 0; i < set.length(); i++) {  //Traverse the set
 			printKeyAndMeta(set.at(i));
 		}
-		LOG.info("*====================================*");
+		LOG.debug("*====================================*");
 	}
 }

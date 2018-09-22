@@ -1,6 +1,7 @@
 package org.elektra;
 
 import org.elektra.errortypes.StructureError;
+import org.elektra.errortypes.TypoError;
 import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
@@ -13,7 +14,7 @@ import static java.util.Objects.nonNull;
 
 public class InjectionPlugin {
 
-    public static final String SEED_META ="inject/randSeed";
+    public static final String SEED_META ="inject/rand/seed";
 
     private final static Logger LOG = LoggerFactory.getLogger(InjectionPlugin.class);
 
@@ -22,6 +23,7 @@ public class InjectionPlugin {
     public KDB kdb;
 
     private final StructureError structureError = new StructureError();
+    private final TypoError typoError = new TypoError();
 
     public InjectionPlugin() {
         kdb = KDB.open(ROOT_KEY);
@@ -53,6 +55,8 @@ public class InjectionPlugin {
             Key current = iterator.next();
             if (hasStructureMetadata(current)) {
                 keySet = structureError.applyStructureError(keySet, current);
+            } else if (hasTypoMetadata(current)) {
+                keySet = typoError.applyStructureError(keySet, current);
             }
         }
 
@@ -90,6 +94,20 @@ public class InjectionPlugin {
         }
         return false;
     }
+
+    private boolean hasTypoMetadata(Key key) {
+        key.rewindMeta();
+        Key currentKey = key.currentMeta();
+        while (nonNull(currentKey.getName())) {
+            if (TypoError.Metadata.hasMetadata(currentKey.getName())) {
+                return true;
+            }
+            currentKey = key.nextMeta();
+        }
+        return false;
+    }
+
+
 
     public static boolean hasSeedSet(Key key) {
         return nonNull(key.getMeta(SEED_META).getName());
