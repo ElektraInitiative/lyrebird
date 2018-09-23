@@ -10,8 +10,6 @@ import org.libelektra.KeySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-
 import static org.elektra.InjectionPlugin.ROOT_KEY;
 import static org.elektra.InjectionPlugin.getSeedFromMeta;
 import static org.elektra.InjectionPlugin.hasSeedSet;
@@ -161,16 +159,7 @@ class StructureErrorTest {
 
     @AfterEach
     public void tearDown() throws KDB.KDBException {
-        loadedKeySet.rewind();
-        Iterator<Key> iterator = loadedKeySet.iterator();
-        while (iterator.hasNext()) {
-            Key current = iterator.next();
-            if (current.getName().startsWith(ROOT_KEY.getName())) {
-                iterator.remove();
-            }
-        }
-        kdb.set(loadedKeySet, ROOT_KEY);
-        kdb.close(ROOT_KEY);
+        Util.cleanUp(loadedKeySet, kdb);
     }
 
 }

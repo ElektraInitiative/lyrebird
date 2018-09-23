@@ -56,7 +56,7 @@ public class InjectionPlugin {
             if (hasStructureMetadata(current)) {
                 keySet = structureError.applyStructureError(keySet, current);
             } else if (hasTypoMetadata(current)) {
-                keySet = typoError.applyStructureError(keySet, current);
+                keySet = typoError.applyTypoError(keySet, current);
             }
         }
 

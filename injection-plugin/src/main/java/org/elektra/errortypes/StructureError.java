@@ -18,7 +18,7 @@ import java.util.stream.IntStream;
 import static java.util.Objects.nonNull;
 import static org.elektra.InjectionPlugin.hasSeedSet;
 
-public class StructureError {
+public class StructureError extends AbstractErrorType{
 
     private final static Logger LOG = LoggerFactory.getLogger(StructureError.class);
 
@@ -59,15 +59,12 @@ public class StructureError {
     private KeySet reallocateSection(KeySet set, Key key) {
         LOG.debug("Applying Structure Error [reallocateSection] to {}", key.getName());
 
+        Randomizer randomizer = getRandomizer(key);
+
         //Remove the metadata to prohibit multiple reallocation
-        key = key.removeMetaIfPresent(Metadata.SECTION_REALLOCATE.getMetadata());
-        key = key.removeMetaIfPresent(InjectionPlugin.SEED_META);
+        key = removeAffectingMeta(key, Metadata.SECTION_REALLOCATE.getMetadata());
         set.append(key);
 
-        Randomizer randomizer = RandomizerSingelton.getInstance();
-        if (hasSeedSet(key)) {
-            randomizer.setSeed(getSeedFromMeta(key));
-        }
         String newRoot = findNewRoot(set, key, randomizer);
         KeySet extractedKS = extractKeySet(set, key);
 
@@ -89,15 +86,12 @@ public class StructureError {
     private KeySet duplicateSection(KeySet set, Key key) {
         LOG.debug("Applying Structure Error [duplicateSection] to {}", key.getName());
 
+        Randomizer randomizer = getRandomizer(key);
+
         //Remove the metadata to prohibit multiple reallocation
-        key = key.removeMetaIfPresent(Metadata.SECTION_REALLOCATE.getMetadata());
-        key = key.removeMetaIfPresent(InjectionPlugin.SEED_META);
+        key = removeAffectingMeta(key, Metadata.SECTION_DUPLICATE.getMetadata());
         set.append(key);
 
-        Randomizer randomizer = RandomizerSingelton.getInstance();
-        if (hasSeedSet(key)) {
-            randomizer.setSeed(getSeedFromMeta(key));
-        }
         String newRoot = findNewRoot(set, key, randomizer);
         KeySet extractedKS = extractKeySet(set, key);
 
