@@ -1,5 +1,6 @@
 package org.elektra;
 
+import org.elektra.errortypes.SemanticError;
 import org.elektra.errortypes.StructureError;
 import org.elektra.errortypes.TypoError;
 import org.libelektra.KDB;
@@ -24,6 +25,7 @@ public class InjectionPlugin {
 
     private final StructureError structureError = new StructureError();
     private final TypoError typoError = new TypoError();
+    private final SemanticError semanticError = new SemanticError();
 
     public InjectionPlugin() {
         kdb = KDB.open(ROOT_KEY);
@@ -57,6 +59,8 @@ public class InjectionPlugin {
                 keySet = structureError.applyStructureError(keySet, current);
             } else if (hasTypoMetadata(current)) {
                 keySet = typoError.applyTypoError(keySet, current);
+            } else if (hasSematnicMetadata(current)) {
+                keySet = semanticError.applySemanticError(keySet, current);
             }
         }
 
@@ -107,6 +111,17 @@ public class InjectionPlugin {
         return false;
     }
 
+    private boolean hasSematnicMetadata(Key key) {
+        key.rewindMeta();
+        Key currentKey = key.currentMeta();
+        while (nonNull(currentKey.getName())) {
+            if (SemanticError.Metadata.hasMetadata(currentKey.getName())) {
+                return true;
+            }
+            currentKey = key.nextMeta();
+        }
+        return false;
+    }
 
 
     public static boolean hasSeedSet(Key key) {

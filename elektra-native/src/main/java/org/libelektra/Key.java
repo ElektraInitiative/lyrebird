@@ -770,8 +770,9 @@ public class Key implements Iterable<String> {
 			if (!currentMetaKey.getName().equals(metaName)) {
 				newKey.setMeta(currentMetaKey.getName(), currentMetaKey.getString());
 			}
-			currentMetaKey = currentMetaKey.nextMeta();
+			currentMetaKey = nextMeta();
 		}
+		newKey.rewindMeta();
 		return newKey;
 	}
 

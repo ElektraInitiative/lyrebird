@@ -98,7 +98,7 @@ public class TypoError extends AbstractErrorType {
         String value = key.getString();
 
         Randomizer randomizer = getRandomizer(key);
-        key = removeAffectingMeta(key, Metadata.TYPO_INSERTION.getMetadata());
+        key = removeAffectingMeta(key, Metadata.TYPO_DELETION.getMetadata());
         set.append(key);
 
         String newString = new StringBuilder(value)
@@ -119,7 +119,7 @@ public class TypoError extends AbstractErrorType {
         String value = key.getString();
 
         Randomizer randomizer = getRandomizer(key);
-        key = removeAffectingMeta(key, Metadata.TYPO_INSERTION.getMetadata());
+        key = removeAffectingMeta(key, Metadata.TYPO_CHANGE_CHAR.getMetadata());
         set.append(key);
 
         char randomChar = availableInsertionCharacters[randomizer.getNextInt(availableInsertionCharacters.length)];
@@ -142,7 +142,7 @@ public class TypoError extends AbstractErrorType {
         String value = key.getString();
 
         Randomizer randomizer = getRandomizer(key);
-        key = removeAffectingMeta(key, Metadata.TYPO_INSERTION.getMetadata());
+        key = removeAffectingMeta(key, Metadata.TYPO_SPACE.getMetadata());
         set.append(key);
 
         // +1 because we want at least one space
