@@ -1,6 +1,6 @@
 package org.elektra;
 
-import org.elektra.errortypes.SemanticError;
+import org.elektra.errortypes.DomainError;
 import org.elektra.errortypes.TypoError;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,12 +15,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.elektra.InjectionPlugin.ROOT_KEY;
-import static org.elektra.errortypes.SemanticError.Metadata.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.elektra.errortypes.DomainError.Metadata.DOMAIN_ERROR;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class SemanticErrorTest {
+class DomainErrorTest {
 
-    private final static Logger LOG = LoggerFactory.getLogger(SemanticErrorTest.class);
+    private final static Logger LOG = LoggerFactory.getLogger(DomainErrorTest.class);
 
     private InjectionPlugin injectionPlugin;
     private KDB kdb;
@@ -36,19 +37,19 @@ class SemanticErrorTest {
         kdb = injectionPlugin.kdb;
         loadedKeySet = KeySet.create();
         kdb.get(loadedKeySet, ROOT_KEY);
-        testKey = Key.create(ROOT_KEY +"/some/value", "abcdef");
+        testKey = Key.create(ROOT_KEY +"/some/value", "myDomain1");
         loadedKeySet.append(testKey);
         alternativeOptions = new ArrayList<>();
-        alternativeOptions.add("one");
-        alternativeOptions.add("two");
-        alternativeOptions.add("three");
+        alternativeOptions.add("myDomain1");
+        alternativeOptions.add("myDomain2");
+        alternativeOptions.add("myDomain3");
     }
 
     @Test
-    public void semanticError_shouldWork() throws Exception {
-        testKey.setMeta(SEMANTIC_ERROR.getMetadata()+"/#0", alternativeOptions.get(0));
-        testKey.setMeta(SEMANTIC_ERROR.getMetadata()+"/#1", alternativeOptions.get(1));
-        testKey.setMeta(SEMANTIC_ERROR.getMetadata()+"/#2", alternativeOptions.get(2));
+    public void domainError_shouldWork() throws Exception {
+        testKey.setMeta(DOMAIN_ERROR.getMetadata()+"/#0", alternativeOptions.get(0));
+        testKey.setMeta(DOMAIN_ERROR.getMetadata()+"/#1", alternativeOptions.get(1));
+        testKey.setMeta(DOMAIN_ERROR.getMetadata()+"/#2", alternativeOptions.get(2));
         testKey.setMeta(InjectionPlugin.SEED_META, "411");
 
         KeySet.printKeySet(loadedKeySet);
@@ -58,15 +59,15 @@ class SemanticErrorTest {
 
         String newString = loadedKeySet.lookup(testKey.getName()).getString();
         assertTrue(alternativeOptions.stream().anyMatch(newString::equals),
-                "None of the provided values were picked in semantic error!");
+                "None of the provided values were picked in domain error!");
         assertNull(loadedKeySet.lookup(testKey.getName())
-                        .getMeta(SemanticError.Metadata.SEMANTIC_ERROR.getMetadata()+"/#0").getName(),
+                        .getMeta(DomainError.Metadata.DOMAIN_ERROR.getMetadata()+"/#0").getName(),
                 "Metadata (#0) was not removed");
         assertNull(loadedKeySet.lookup(testKey.getName())
-                        .getMeta(SemanticError.Metadata.SEMANTIC_ERROR.getMetadata()+"/#1").getName(),
+                        .getMeta(DomainError.Metadata.DOMAIN_ERROR.getMetadata()+"/#1").getName(),
                 "Metadata (#1) was not removed");
         assertNull(loadedKeySet.lookup(testKey.getName())
-                        .getMeta(SemanticError.Metadata.SEMANTIC_ERROR.getMetadata()+"/#2").getName(),
+                        .getMeta(DomainError.Metadata.DOMAIN_ERROR.getMetadata()+"/#2").getName(),
                 "Metadata (#2) was not removed");
     }
 

@@ -1,8 +1,6 @@
 package org.elektra;
 
-import org.elektra.errortypes.SemanticError;
-import org.elektra.errortypes.StructureError;
-import org.elektra.errortypes.TypoError;
+import org.elektra.errortypes.*;
 import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
@@ -26,6 +24,8 @@ public class InjectionPlugin {
     private final StructureError structureError = new StructureError();
     private final TypoError typoError = new TypoError();
     private final SemanticError semanticError = new SemanticError();
+    private final ResourceError resourceError = new ResourceError();
+    private final DomainError domainError = new DomainError();
 
     public InjectionPlugin() {
         kdb = KDB.open(ROOT_KEY);
@@ -59,8 +59,12 @@ public class InjectionPlugin {
                 keySet = structureError.applyStructureError(keySet, current);
             } else if (hasTypoMetadata(current)) {
                 keySet = typoError.applyTypoError(keySet, current);
-            } else if (hasSematnicMetadata(current)) {
+            } else if (hasSemanticMetadata(current)) {
                 keySet = semanticError.applySemanticError(keySet, current);
+            } else if (hasResourceMetadata(current)) {
+                keySet = resourceError.applyResourceError(keySet, current);
+            } else if (hasDomaincMetadata(current)) {
+                keySet = domainError.applyDomainError(keySet, current);
             }
         }
 
@@ -111,7 +115,19 @@ public class InjectionPlugin {
         return false;
     }
 
-    private boolean hasSematnicMetadata(Key key) {
+    private boolean hasResourceMetadata(Key key) {
+        key.rewindMeta();
+        Key currentKey = key.currentMeta();
+        while (nonNull(currentKey.getName())) {
+            if (ResourceError.Metadata.hasMetadata(currentKey.getName())) {
+                return true;
+            }
+            currentKey = key.nextMeta();
+        }
+        return false;
+    }
+
+    private boolean hasSemanticMetadata(Key key) {
         key.rewindMeta();
         Key currentKey = key.currentMeta();
         while (nonNull(currentKey.getName())) {
@@ -123,6 +139,17 @@ public class InjectionPlugin {
         return false;
     }
 
+    private boolean hasDomaincMetadata(Key key) {
+        key.rewindMeta();
+        Key currentKey = key.currentMeta();
+        while (nonNull(currentKey.getName())) {
+            if (DomainError.Metadata.hasMetadata(currentKey.getName())) {
+                return true;
+            }
+            currentKey = key.nextMeta();
+        }
+        return false;
+    }
 
     public static boolean hasSeedSet(Key key) {
         return nonNull(key.getMeta(SEED_META).getName());
