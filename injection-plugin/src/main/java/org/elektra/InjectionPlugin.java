@@ -26,6 +26,7 @@ public class InjectionPlugin {
     private final SemanticError semanticError = new SemanticError();
     private final ResourceError resourceError = new ResourceError();
     private final DomainError domainError = new DomainError();
+    private final LimitError limitError = new LimitError();
 
     public InjectionPlugin() {
         kdb = KDB.open(ROOT_KEY);
@@ -65,6 +66,8 @@ public class InjectionPlugin {
                 keySet = resourceError.applyResourceError(keySet, current);
             } else if (hasDomaincMetadata(current)) {
                 keySet = domainError.applyDomainError(keySet, current);
+            } else if (hasLimitMetadata(current)) {
+                keySet = limitError.applyLimitError(keySet, current);
             }
         }
 
@@ -89,6 +92,18 @@ public class InjectionPlugin {
 
     public String getName() {
         return name;
+    }
+
+    private boolean hasLimitMetadata(Key key) {
+        key.rewindMeta();
+        Key currentKey = key.currentMeta();
+        while (nonNull(currentKey.getName())) {
+            if (LimitError.Metadata.hasMetadata(currentKey.getName())) {
+                return true;
+            }
+            currentKey = key.nextMeta();
+        }
+        return false;
     }
 
     private boolean hasStructureMetadata(Key key) {

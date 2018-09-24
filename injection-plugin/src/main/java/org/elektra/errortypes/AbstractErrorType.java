@@ -14,8 +14,10 @@ import static org.elektra.InjectionPlugin.hasSeedSet;
 
 public abstract class AbstractErrorType {
 
-    protected Key removeAffectingMeta(Key key, String metadata) {
-        key = key.removeMetaIfPresent(metadata);
+    protected Key removeAffectingMeta(Key key, String... metadata) {
+        for (String singleMetadata : metadata) {
+            key = key.removeMetaIfPresent(singleMetadata);
+        }
         key = key.removeMetaIfPresent(InjectionPlugin.SEED_META);
         return key;
     }
