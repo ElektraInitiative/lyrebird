@@ -30,6 +30,9 @@ public class Main {
         LOG.info("Sleeping");
         Thread.sleep(5000);
         runner.stop();
+        LOG.info("{}", runner.getLogEntry());
+
+
 //        mainRun();
     }
 
