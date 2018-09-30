@@ -64,7 +64,7 @@ class PluginTests {
 
             System.out.println("Returned Error Code: " + resultCode);
 
-            KeySet.toString(set);
+            KeySet.printKeySet(set);
             printKeyAndMeta(key);
         } catch (KDB.KDBException e) {
             e.printStackTrace();

@@ -5,6 +5,7 @@ import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.libelektra.Plugin;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
+import org.libelektra.lyrebird.runner.impl.CassandraRunner;
 import org.libelektra.lyrebird.runner.impl.LCDprocRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +23,12 @@ public class Main {
     static String ROOT = "user";
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        ApplicationRunner runner = new LCDprocRunner();
+
+        CassandraRunner.startClusterIfNotUp();
+        ApplicationRunner runner = new CassandraRunner();
         runner.start();
+        LOG.info("Sleeping");
+        Thread.sleep(5000);
         runner.stop();
 //        mainRun();
     }
@@ -40,7 +45,7 @@ public class Main {
             int resultCode = plugin.kdbSet(set, key);
             logResult(resultCode);
 
-            KeySet.toString(set);
+            KeySet.printKeySet(set);
             Key.printKeyAndMeta(key);
         } catch (KDB.KDBException e) {
             e.printStackTrace();
