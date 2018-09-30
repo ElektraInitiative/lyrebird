@@ -28,6 +28,9 @@ public class CassandraRunner implements ApplicationRunner {
     private static final String TEST_NODE = "node1";
     private static final String LOG_LOCATION =
             String.format("/home/%s/.ccm/%s/node1/logs/system.log", USER, CLUSTER_NAME);
+    private static final String CONF_LOCATION =
+            String.format("/home/%s/.ccm/%s/node1/conf/cassandra.yaml", USER, CLUSTER_NAME);
+
 
     private Tailer tailer;
     private LogListener tailerListener;
@@ -116,7 +119,6 @@ public class CassandraRunner implements ApplicationRunner {
         currentLogEntry = new LogEntry();
         List<String> errorLogs = logs.stream().filter(str -> str.contains("ERROR")).collect(Collectors.toList());
         if (errorLogs.size() > 0) {
-            LOG.info("RUN CONTAINED ERROR!!!");
             currentLogEntry.setResultType(LogEntry.RESULT_TYPE.ERROR);
         }
         currentLogEntry.setLogMessage(String.join("\n", logs));

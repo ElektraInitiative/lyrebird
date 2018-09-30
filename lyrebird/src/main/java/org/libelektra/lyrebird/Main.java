@@ -11,6 +11,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.Locale;
 
 public class Main {
 
@@ -24,15 +28,15 @@ public class Main {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
-        CassandraRunner.startClusterIfNotUp();
-        ApplicationRunner runner = new CassandraRunner();
+
+//        CassandraRunner.startClusterIfNotUp();
+//        ApplicationRunner runner = new CassandraRunner();
+        ApplicationRunner runner = new LCDprocRunner();
         runner.start();
         LOG.info("Sleeping");
         Thread.sleep(5000);
         runner.stop();
-        LOG.info("{}", runner.getLogEntry());
-
-
+//        LOG.info("{}", runner.getLogEntry());
 //        mainRun();
     }
 
