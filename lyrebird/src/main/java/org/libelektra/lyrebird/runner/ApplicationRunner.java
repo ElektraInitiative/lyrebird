@@ -8,13 +8,15 @@ import java.util.Set;
 
 public interface ApplicationRunner {
 
+    static final String ELEKTRA_NAMESPACE = "system";
+
     void start() throws IOException, InterruptedException;
 
     void stop() throws IOException, InterruptedException;
 
     void injectInConfiguration();
 
-    void resetConfiguration();
+    void resetConfiguration() throws IOException;
 
     LogEntry getLogEntry();
 

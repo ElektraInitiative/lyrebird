@@ -24,7 +24,7 @@ public class Main {
         System.setProperty("jna.library.path", "/usr/local/lib");
     }
 
-    static String ROOT = "user";
+    static String ROOT = "system";
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
@@ -32,8 +32,9 @@ public class Main {
 //        CassandraRunner.startClusterIfNotUp();
 //        ApplicationRunner runner = new CassandraRunner();
         ApplicationRunner runner = new LCDprocRunner();
+        runner.resetConfiguration();
         runner.start();
-        LOG.info("Sleeping");
+//        LOG.info("Sleeping");
         Thread.sleep(5000);
         runner.stop();
 //        LOG.info("{}", runner.getLogEntry());
