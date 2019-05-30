@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -30,13 +31,18 @@ public class LCDprocRunner implements ApplicationRunner {
     private final String LOG_LOCATION = "/var/log/syslog";
 
     private LogEntry currentLogEntry;
+    private final static String LCDSERVER_RUN_CONFIG = "lcdproc/LCDd-run.ini";
 
 
     @Override
     public void start() throws IOException, InterruptedException {
 
-//        String[] command = (new String[]{"/bin/bash", "-c", "LCDd"});
-        String[] command = (new String[]{"xterm", "-e", "su -c 'LCDd -s 1' wespe"});
+        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+        File filee = new File(classLoader.getResource(LCDSERVER_RUN_CONFIG).getFile());
+
+//        String[] command = (new String[]{"/bin/bash", "-c", String.format("'LCDd -f -c %s'",  filee.getAbsolutePath())});
+        String[] command = (new String[]{"xterm", "-e", String.format("LCDd -f -c %s",  filee.getAbsolutePath())});
+        System.out.println(Arrays.toString(command));
         process = new ProcessBuilder(command)
                 .redirectErrorStream(true)
                 .start();
@@ -48,7 +54,7 @@ public class LCDprocRunner implements ApplicationRunner {
 
     @Override
     public void stop() throws IOException, InterruptedException {
-        Runtime.getRuntime().exec("killall -s SIGTERM LCDd");
+        Runtime.getRuntime().exec("killall -s SIGINT LCDd");
         process.destroy();
         process.waitFor();
         tailer.stop();

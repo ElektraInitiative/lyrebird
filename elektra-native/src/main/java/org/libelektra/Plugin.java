@@ -104,8 +104,8 @@ public class Plugin {
         NETWORK("network"),
         TYPE("type"),
         CONDITIONALS("conditionals"),
-        BOOLEAN("boolean"),
         VALIDATION("validation"),
+        REFERENCE("reference"),
         RANGE("range");
 
         private final String pluginName;
