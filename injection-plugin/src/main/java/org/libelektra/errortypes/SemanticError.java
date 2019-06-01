@@ -1,4 +1,4 @@
-package org.elektra.errortypes;
+package org.libelektra.errortypes;
 
 import org.libelektra.Key;
 import org.libelektra.KeySet;
@@ -10,34 +10,33 @@ import java.util.List;
 import static java.util.Objects.nonNull;
 import static org.libelektra.util.RandomizerSingelton.Randomizer;
 
-public class DomainError extends AbstractErrorType {
+public class SemanticError extends AbstractErrorType {
 
-    private final static Logger LOG = LoggerFactory.getLogger(DomainError.class);
+    private final static Logger LOG = LoggerFactory.getLogger(SemanticError.class);
 
 
-    public KeySet applyDomainError(KeySet set, Key key) {
+    public KeySet applySemanticError(KeySet set, Key key) {
         key.rewindMeta();
         Key currentKey = key.currentMeta();
         while (nonNull(currentKey.getName())) {
-            if (currentKey.getName().startsWith(Metadata.DOMAIN_ERROR.getMetadata())) {
-                return resourceError(set, key);
+            if (currentKey.getName().startsWith(Metadata.SEMANTIC_ERROR.getMetadata())) {
+                return semanticError(set, key);
             }
             currentKey = key.nextMeta();
         }
         return set;
     }
 
-    private KeySet resourceError(KeySet set, Key key) {
-        LOG.debug("Applying resource error to {}", key.getName());
-        String metadata = Metadata.DOMAIN_ERROR.getMetadata();
+    private KeySet semanticError(KeySet set, Key key) {
+        LOG.debug("Applying semantic error to {}", key.getName());
         String value = key.getString();
-        List<String> allMetaArrayValues = extractMetaDataArray(key, metadata);
+        List<String> allMetaArrayValues = extractMetaDataArray(key, Metadata.SEMANTIC_ERROR.getMetadata());
         Randomizer randomizer = getRandomizer(key);
-        key = removeAffectingMetaArray(key, metadata);
+        key = removeAffectingMetaArray(key, Metadata.SEMANTIC_ERROR.getMetadata());
         set.append(key);
 
         if (allMetaArrayValues.size() == 0) {
-            LOG.warn("Cannot apply domain error without provided alternatives");
+            LOG.warn("Cannot apply semantic error without provided alternatives");
             return set;
         }
 
@@ -46,7 +45,7 @@ public class DomainError extends AbstractErrorType {
         key.setString(newValue);
         set.append(key);
 
-        String message = String.format("Domain Error [%s ===> %s] on %s",
+        String message = String.format("Semantic Error [%s ===> %s] on %s",
                 value, newValue, key.getName());
         LOG.debug(message);
 
@@ -54,7 +53,7 @@ public class DomainError extends AbstractErrorType {
     }
 
     public static enum Metadata {
-        DOMAIN_ERROR("inject/domain");
+        SEMANTIC_ERROR("inject/semantic");
 
         private final String metadata;
 

@@ -1,27 +1,24 @@
-package org.elektra;
+package org.libelektra;
 
-import org.elektra.errortypes.DomainError;
+import org.libelektra.errortypes.SemanticError;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.libelektra.KDB;
-import org.libelektra.Key;
-import org.libelektra.KeySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.elektra.InjectionPlugin.ROOT_KEY;
-import static org.elektra.errortypes.DomainError.Metadata.DOMAIN_ERROR;
+import static org.libelektra.InjectionPlugin.ROOT_KEY;
+import static org.libelektra.errortypes.SemanticError.Metadata.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertNull;
 
-class DomainErrorTest {
+class SemanticErrorTest {
 
-    private final static Logger LOG = LoggerFactory.getLogger(DomainErrorTest.class);
+    private final static Logger LOG = LoggerFactory.getLogger(SemanticErrorTest.class);
 
     private InjectionPlugin injectionPlugin;
     private KDB kdb;
@@ -37,19 +34,19 @@ class DomainErrorTest {
         kdb = injectionPlugin.kdb;
         loadedKeySet = KeySet.create();
         kdb.get(loadedKeySet, ROOT_KEY);
-        testKey = Key.create(ROOT_KEY + "/some/value", "myDomain1");
+        testKey = Key.create(ROOT_KEY + "/some/value", "abcdef");
         loadedKeySet.append(testKey);
         alternativeOptions = new ArrayList<>();
-        alternativeOptions.add("myDomain1");
-        alternativeOptions.add("myDomain2");
-        alternativeOptions.add("myDomain3");
+        alternativeOptions.add("one");
+        alternativeOptions.add("two");
+        alternativeOptions.add("three");
     }
 
     @Test
-    public void domainError_shouldWork() throws Exception {
-        testKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#0", alternativeOptions.get(0));
-        testKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#1", alternativeOptions.get(1));
-        testKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#2", alternativeOptions.get(2));
+    public void semanticError_shouldWork() throws Exception {
+        testKey.setMeta(SEMANTIC_ERROR.getMetadata() + "/#0", alternativeOptions.get(0));
+        testKey.setMeta(SEMANTIC_ERROR.getMetadata() + "/#1", alternativeOptions.get(1));
+        testKey.setMeta(SEMANTIC_ERROR.getMetadata() + "/#2", alternativeOptions.get(2));
         testKey.setMeta(InjectionPlugin.SEED_META, "411");
 
         KeySet.printKeySet(loadedKeySet);
@@ -58,20 +55,20 @@ class DomainErrorTest {
         KeySet.printKeySet(loadedKeySet);
 
         String newString = loadedKeySet.lookup(testKey.getName()).getString();
-        assertThat("None of the provided values were picked in domain error!",
+        assertThat("None of the provided values were picked in semantic error!",
                 alternativeOptions.stream().anyMatch(newString::equals),
                 is(true));
         assertThat("Metadata (#0) was not removed",
                 loadedKeySet.lookup(testKey.getName())
-                        .getMeta(DomainError.Metadata.DOMAIN_ERROR.getMetadata() + "/#0").getName(),
+                        .getMeta(SemanticError.Metadata.SEMANTIC_ERROR.getMetadata() + "/#0").getName(),
                 nullValue());
         assertThat("Metadata (#1) was not removed",
                 loadedKeySet.lookup(testKey.getName())
-                        .getMeta(DomainError.Metadata.DOMAIN_ERROR.getMetadata() + "/#1").getName(),
+                        .getMeta(SemanticError.Metadata.SEMANTIC_ERROR.getMetadata() + "/#1").getName(),
                 nullValue());
         assertThat("Metadata (#2) was not removed",
                 loadedKeySet.lookup(testKey.getName())
-                        .getMeta(DomainError.Metadata.DOMAIN_ERROR.getMetadata() + "/#2").getName(),
+                        .getMeta(SemanticError.Metadata.SEMANTIC_ERROR.getMetadata() + "/#2").getName(),
                 nullValue());
     }
 

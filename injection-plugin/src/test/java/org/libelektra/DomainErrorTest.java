@@ -1,28 +1,24 @@
-package org.elektra;
+package org.libelektra;
 
-import org.elektra.errortypes.ResourceError;
-import org.elektra.errortypes.TypoError;
+import org.libelektra.errortypes.DomainError;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.libelektra.KDB;
-import org.libelektra.Key;
-import org.libelektra.KeySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.libelektra.InjectionPlugin.ROOT_KEY;
+import static org.libelektra.errortypes.DomainError.Metadata.DOMAIN_ERROR;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
-import static org.elektra.InjectionPlugin.ROOT_KEY;
-import static org.elektra.errortypes.ResourceError.Metadata.RESOURCE_ERROR;
+class DomainErrorTest {
 
-class ResourceErrorTest {
-
-    private final static Logger LOG = LoggerFactory.getLogger(ResourceErrorTest.class);
+    private final static Logger LOG = LoggerFactory.getLogger(DomainErrorTest.class);
 
     private InjectionPlugin injectionPlugin;
     private KDB kdb;
@@ -38,19 +34,19 @@ class ResourceErrorTest {
         kdb = injectionPlugin.kdb;
         loadedKeySet = KeySet.create();
         kdb.get(loadedKeySet, ROOT_KEY);
-        testKey = Key.create(ROOT_KEY + "/some/value", "/my/valid/path");
+        testKey = Key.create(ROOT_KEY + "/some/value", "myDomain1");
         loadedKeySet.append(testKey);
         alternativeOptions = new ArrayList<>();
-        alternativeOptions.add("/tmp/myfile.txt");
-        alternativeOptions.add("/root/secure.txt");
-        alternativeOptions.add("/does/not/exist");
+        alternativeOptions.add("myDomain1");
+        alternativeOptions.add("myDomain2");
+        alternativeOptions.add("myDomain3");
     }
 
     @Test
-    public void resourceError_shouldWork() throws Exception {
-        testKey.setMeta(RESOURCE_ERROR.getMetadata() + "/#0", alternativeOptions.get(0));
-        testKey.setMeta(RESOURCE_ERROR.getMetadata() + "/#1", alternativeOptions.get(1));
-        testKey.setMeta(RESOURCE_ERROR.getMetadata() + "/#2", alternativeOptions.get(2));
+    public void domainError_shouldWork() throws Exception {
+        testKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#0", alternativeOptions.get(0));
+        testKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#1", alternativeOptions.get(1));
+        testKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#2", alternativeOptions.get(2));
         testKey.setMeta(InjectionPlugin.SEED_META, "411");
 
         KeySet.printKeySet(loadedKeySet);
@@ -59,22 +55,23 @@ class ResourceErrorTest {
         KeySet.printKeySet(loadedKeySet);
 
         String newString = loadedKeySet.lookup(testKey.getName()).getString();
-        assertThat("None of the provided values were picked in resource error!",
+        assertThat("None of the provided values were picked in domain error!",
                 alternativeOptions.stream().anyMatch(newString::equals),
                 is(true));
         assertThat("Metadata (#0) was not removed",
                 loadedKeySet.lookup(testKey.getName())
-                        .getMeta(ResourceError.Metadata.RESOURCE_ERROR.getMetadata() + "/#0").getName(),
+                        .getMeta(DomainError.Metadata.DOMAIN_ERROR.getMetadata() + "/#0").getName(),
                 nullValue());
         assertThat("Metadata (#1) was not removed",
                 loadedKeySet.lookup(testKey.getName())
-                        .getMeta(ResourceError.Metadata.RESOURCE_ERROR.getMetadata() + "/#1").getName(),
+                        .getMeta(DomainError.Metadata.DOMAIN_ERROR.getMetadata() + "/#1").getName(),
                 nullValue());
         assertThat("Metadata (#2) was not removed",
                 loadedKeySet.lookup(testKey.getName())
-                        .getMeta(ResourceError.Metadata.RESOURCE_ERROR.getMetadata() + "/#2").getName(),
+                        .getMeta(DomainError.Metadata.DOMAIN_ERROR.getMetadata() + "/#2").getName(),
                 nullValue());
     }
+
 
     @After
     public void tearDown() throws KDB.KDBException {

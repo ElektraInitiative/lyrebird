@@ -1,11 +1,9 @@
-package org.elektra.errortypes;
+package org.libelektra.errortypes;
 
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;

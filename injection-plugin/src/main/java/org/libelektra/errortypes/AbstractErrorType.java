@@ -1,6 +1,6 @@
-package org.elektra.errortypes;
+package org.libelektra.errortypes;
 
-import org.elektra.InjectionPlugin;
+import org.libelektra.InjectionPlugin;
 import org.libelektra.Key;
 import org.libelektra.util.RandomizerSingelton;
 
@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Objects;
 
 import static java.util.Objects.nonNull;
-import static org.elektra.InjectionPlugin.getSeedFromMeta;
-import static org.elektra.InjectionPlugin.hasSeedSet;
+import static org.libelektra.InjectionPlugin.getSeedFromMeta;
+import static org.libelektra.InjectionPlugin.hasSeedSet;
 
 public abstract class AbstractErrorType {
 

@@ -1,4 +1,4 @@
-package org.elektra.errortypes;
+package org.libelektra.errortypes;
 
 import org.libelektra.Key;
 import org.libelektra.KeySet;
@@ -10,16 +10,16 @@ import java.util.List;
 import static java.util.Objects.nonNull;
 import static org.libelektra.util.RandomizerSingelton.Randomizer;
 
-public class ResourceError extends AbstractErrorType {
+public class DomainError extends AbstractErrorType {
 
-    private final static Logger LOG = LoggerFactory.getLogger(ResourceError.class);
+    private final static Logger LOG = LoggerFactory.getLogger(DomainError.class);
 
 
-    public KeySet applyResourceError(KeySet set, Key key) {
+    public KeySet applyDomainError(KeySet set, Key key) {
         key.rewindMeta();
         Key currentKey = key.currentMeta();
         while (nonNull(currentKey.getName())) {
-            if (currentKey.getName().startsWith(Metadata.RESOURCE_ERROR.getMetadata())) {
+            if (currentKey.getName().startsWith(Metadata.DOMAIN_ERROR.getMetadata())) {
                 return resourceError(set, key);
             }
             currentKey = key.nextMeta();
@@ -29,7 +29,7 @@ public class ResourceError extends AbstractErrorType {
 
     private KeySet resourceError(KeySet set, Key key) {
         LOG.debug("Applying resource error to {}", key.getName());
-        String metadata = Metadata.RESOURCE_ERROR.getMetadata();
+        String metadata = Metadata.DOMAIN_ERROR.getMetadata();
         String value = key.getString();
         List<String> allMetaArrayValues = extractMetaDataArray(key, metadata);
         Randomizer randomizer = getRandomizer(key);
@@ -37,7 +37,7 @@ public class ResourceError extends AbstractErrorType {
         set.append(key);
 
         if (allMetaArrayValues.size() == 0) {
-            LOG.warn("Cannot apply resource error without provided alternatives");
+            LOG.warn("Cannot apply domain error without provided alternatives");
             return set;
         }
 
@@ -46,7 +46,7 @@ public class ResourceError extends AbstractErrorType {
         key.setString(newValue);
         set.append(key);
 
-        String message = String.format("Resource Error [%s ===> %s] on %s",
+        String message = String.format("Domain Error [%s ===> %s] on %s",
                 value, newValue, key.getName());
         LOG.debug(message);
 
@@ -54,7 +54,7 @@ public class ResourceError extends AbstractErrorType {
     }
 
     public static enum Metadata {
-        RESOURCE_ERROR("inject/resource");
+        DOMAIN_ERROR("inject/domain");
 
         private final String metadata;
 

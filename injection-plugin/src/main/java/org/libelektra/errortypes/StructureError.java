@@ -1,14 +1,11 @@
-package org.elektra.errortypes;
+package org.libelektra.errortypes;
 
-import org.elektra.InjectionPlugin;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 
-import static org.elektra.InjectionPlugin.ROOT_KEY;
-import static org.elektra.InjectionPlugin.getSeedFromMeta;
+import static org.libelektra.InjectionPlugin.ROOT_KEY;
 import static org.libelektra.util.RandomizerSingelton.Randomizer;
 
-import org.libelektra.util.RandomizerSingelton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +13,6 @@ import java.util.Iterator;
 import java.util.stream.IntStream;
 
 import static java.util.Objects.nonNull;
-import static org.elektra.InjectionPlugin.hasSeedSet;
 
 public class StructureError extends AbstractErrorType{
 
@@ -55,7 +51,7 @@ public class StructureError extends AbstractErrorType{
         }
     }
 
-    //What a disgusting method ... but elektra forces me to do it
+    //What a disgusting method ... but libelektra forces me to do it
     private KeySet reallocateSection(KeySet set, Key key) {
         LOG.debug("Applying Structure Error [reallocateSection] to {}", key.getName());
 

@@ -1,18 +1,15 @@
-package org.elektra;
+package org.libelektra;
 
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.libelektra.KDB;
-import org.libelektra.Key;
-import org.libelektra.KeySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.elektra.InjectionPlugin.ROOT_KEY;
-import static org.elektra.errortypes.LimitError.Metadata.LIMIT_ERROR_MAX;
-import static org.elektra.errortypes.LimitError.Metadata.LIMIT_ERROR_MIN;
+import static org.libelektra.InjectionPlugin.ROOT_KEY;
+import static org.libelektra.errortypes.LimitError.Metadata.LIMIT_ERROR_MAX;
+import static org.libelektra.errortypes.LimitError.Metadata.LIMIT_ERROR_MIN;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 

@@ -1,9 +1,6 @@
-package org.elektra;
+package org.libelektra;
 
-import org.elektra.errortypes.*;
-import org.libelektra.KDB;
-import org.libelektra.Key;
-import org.libelektra.KeySet;
+import org.libelektra.errortypes.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

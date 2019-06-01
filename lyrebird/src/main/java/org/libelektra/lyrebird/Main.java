@@ -5,31 +5,40 @@ import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.libelektra.Plugin;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
-import org.libelektra.lyrebird.runner.impl.LCDprocRunner;
+import org.libelektra.service.KDBService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.elektra.Util;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.IOException;
 
-@SpringBootApplication
+import static org.libelektra.service.KDBService.ROOT;
+
+@SpringBootApplication(scanBasePackages = "org.libelektra")
 public class Main implements CommandLineRunner {
 
     private final static Logger LOG = LoggerFactory.getLogger(Main.class);
+
+    private final ApplicationRunner runner;
+    private final KDBService kdbService;
 
     static {
         System.setProperty("jna.library.path", "/usr/local/lib");
     }
 
-    static String ROOT = "system";
+    public Main(ApplicationRunner runner,
+                KDBService kdbService) {
+        this.runner = runner;
+        this.kdbService = kdbService;
+    }
 
     @Override
     public void run(String... args) throws Exception {
-        ApplicationRunner runner = new LCDprocRunner();
+        runner.resetConfiguration();
         runner.injectInConfiguration();
+//        runner.cleanUp();
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {

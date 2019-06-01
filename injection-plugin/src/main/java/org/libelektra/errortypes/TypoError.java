@@ -1,4 +1,4 @@
-package org.elektra.errortypes;
+package org.libelektra.errortypes;
 
 import org.libelektra.Key;
 import org.libelektra.KeySet;

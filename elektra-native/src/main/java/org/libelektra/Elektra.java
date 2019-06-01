@@ -10,9 +10,9 @@ import com.sun.jna.Pointer;
 public interface Elektra extends Library {
 
 	/**
-	 * Overall native binding to the elektra library
+	 * Overall native binding to the libelektra library
 	 */
-	Elektra INSTANCE = (Elektra) Native.loadLibrary("elektra", Elektra.class);
+	Elektra INSTANCE = (Elektra) Native.loadLibrary("libelektra", Elektra.class);
 
 	/**************************************
 	 *

@@ -1,17 +1,14 @@
-package org.elektra;
+package org.libelektra;
 
-import org.elektra.errortypes.StructureError;
+import org.libelektra.errortypes.StructureError;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.libelektra.KDB;
-import org.libelektra.Key;
-import org.libelektra.KeySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.elektra.InjectionPlugin.*;
-import static org.elektra.errortypes.StructureError.Metadata.*;
+import static org.libelektra.InjectionPlugin.*;
+import static org.libelektra.errortypes.StructureError.Metadata.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 

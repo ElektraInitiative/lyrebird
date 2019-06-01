@@ -1,17 +1,14 @@
-package org.elektra;
+package org.libelektra;
 
-import org.elektra.errortypes.TypoError;
+import org.libelektra.errortypes.TypoError;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.libelektra.KDB;
-import org.libelektra.Key;
-import org.libelektra.KeySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.elektra.InjectionPlugin.ROOT_KEY;
-import static org.elektra.errortypes.TypoError.Metadata.*;
+import static org.libelektra.InjectionPlugin.ROOT_KEY;
+import static org.libelektra.errortypes.TypoError.Metadata.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 

@@ -1,44 +1,43 @@
-package org.elektra.errortypes;
+package org.libelektra.errortypes;
 
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Objects.nonNull;
 import static org.libelektra.util.RandomizerSingelton.Randomizer;
 
-public class SemanticError extends AbstractErrorType {
+public class ResourceError extends AbstractErrorType {
 
-    private final static Logger LOG = LoggerFactory.getLogger(SemanticError.class);
+    private final static Logger LOG = LoggerFactory.getLogger(ResourceError.class);
 
 
-    public KeySet applySemanticError(KeySet set, Key key) {
+    public KeySet applyResourceError(KeySet set, Key key) {
         key.rewindMeta();
         Key currentKey = key.currentMeta();
         while (nonNull(currentKey.getName())) {
-            if (currentKey.getName().startsWith(Metadata.SEMANTIC_ERROR.getMetadata())) {
-                return semanticError(set, key);
+            if (currentKey.getName().startsWith(Metadata.RESOURCE_ERROR.getMetadata())) {
+                return resourceError(set, key);
             }
             currentKey = key.nextMeta();
         }
         return set;
     }
 
-    private KeySet semanticError(KeySet set, Key key) {
-        LOG.debug("Applying semantic error to {}", key.getName());
+    private KeySet resourceError(KeySet set, Key key) {
+        LOG.debug("Applying resource error to {}", key.getName());
+        String metadata = Metadata.RESOURCE_ERROR.getMetadata();
         String value = key.getString();
-        List<String> allMetaArrayValues = extractMetaDataArray(key, Metadata.SEMANTIC_ERROR.getMetadata());
+        List<String> allMetaArrayValues = extractMetaDataArray(key, metadata);
         Randomizer randomizer = getRandomizer(key);
-        key = removeAffectingMetaArray(key, Metadata.SEMANTIC_ERROR.getMetadata());
+        key = removeAffectingMetaArray(key, metadata);
         set.append(key);
 
         if (allMetaArrayValues.size() == 0) {
-            LOG.warn("Cannot apply semantic error without provided alternatives");
+            LOG.warn("Cannot apply resource error without provided alternatives");
             return set;
         }
 
@@ -47,7 +46,7 @@ public class SemanticError extends AbstractErrorType {
         key.setString(newValue);
         set.append(key);
 
-        String message = String.format("Semantic Error [%s ===> %s] on %s",
+        String message = String.format("Resource Error [%s ===> %s] on %s",
                 value, newValue, key.getName());
         LOG.debug(message);
 
@@ -55,7 +54,7 @@ public class SemanticError extends AbstractErrorType {
     }
 
     public static enum Metadata {
-        SEMANTIC_ERROR("inject/semantic");
+        RESOURCE_ERROR("inject/resource");
 
         private final String metadata;
 
