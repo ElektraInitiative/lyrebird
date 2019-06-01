@@ -9,10 +9,14 @@ import org.libelektra.lyrebird.runner.impl.LCDprocRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.elektra.Util;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.IOException;
 
-public class Main {
+@SpringBootApplication
+public class Main implements CommandLineRunner {
 
     private final static Logger LOG = LoggerFactory.getLogger(Main.class);
 
@@ -22,14 +26,22 @@ public class Main {
 
     static String ROOT = "system";
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    @Override
+    public void run(String... args) throws Exception {
+        ApplicationRunner runner = new LCDprocRunner();
+        runner.injectInConfiguration();
+    }
 
+    public static void main(String[] args) throws IOException, InterruptedException {
+        LOG.info("STARTING THE APPLICATION");
+        SpringApplication.run(Main.class, args);
+        LOG.info("APPLICATION FINISHED");
 
 //        CassandraRunner.startClusterIfNotUp();
 //        ApplicationRunner runner = new CassandraRunner();
-        ApplicationRunner runner = new LCDprocRunner();
+
 //        runner.resetConfiguration();
-        runner.injectInConfiguration();
+
 //        runner.cleanUp();
 //        runner.start();
 //        LOG.info("Sleeping");
@@ -86,5 +98,4 @@ public class Main {
             LOG.info("Returned Error Code: {}", returncode);
         }
     }
-
 }

@@ -1,19 +1,19 @@
 package org.elektra;
 
-import org.elektra.errortypes.StructureError;
 import org.elektra.errortypes.TypoError;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.elektra.InjectionPlugin.*;
+import static org.elektra.InjectionPlugin.ROOT_KEY;
 import static org.elektra.errortypes.TypoError.Metadata.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 class TypoErrorTest {
 
@@ -25,7 +25,7 @@ class TypoErrorTest {
     private Key testKey;
 
 
-    @BeforeEach
+    @Before
     public void setUp() throws KDB.KDBException {
         injectionPlugin = new InjectionPlugin("user/tests/inject");
         kdb = injectionPlugin.kdb;
@@ -43,15 +43,16 @@ class TypoErrorTest {
         KeySet.printKeySet(loadedKeySet);
         kdb.set(loadedKeySet, ROOT_KEY);
         injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
-        assertEquals(loadedKeySet.lookup(testKey.getName()).getString().length(),
-                testKey.getString().length(),
-                "Changed the length in transposition");
-        assertNotEquals(loadedKeySet.lookup(testKey.getName()).getString(),
-                testKey.getString(),
-                "Strings are still the same after transposition");
-        assertNull(loadedKeySet.lookup(testKey.getName())
+        assertThat("Changed the length in transposition",
+                loadedKeySet.lookup(testKey.getName()).getString().length(),
+                is(testKey.getString().length()));
+        assertThat("Strings are still the same after transposition",
+                loadedKeySet.lookup(testKey.getName()).getString(),
+                not(testKey.getString()));
+        assertThat("Metadata was not removed",
+                loadedKeySet.lookup(testKey.getName())
                         .getMeta(TypoError.Metadata.TYPO_TRANSPOSITION.getMetadata()).getName(),
-                "Metadata was not removed");
+                nullValue());
         KeySet.printKeySet(loadedKeySet);
     }
 
@@ -63,12 +64,12 @@ class TypoErrorTest {
         KeySet.printKeySet(loadedKeySet);
         kdb.set(loadedKeySet, ROOT_KEY);
         injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
-        assertNull(loadedKeySet.lookup(testKey.getName())
-                        .getMeta(TypoError.Metadata.TYPO_INSERTION.getMetadata()).getName(),
-                "Metadata was not removed");
-        assertNotEquals(loadedKeySet.lookup(testKey.getName()).getString(),
-                testKey.getString(),
-                "Strings are still the same after character injection");
+        assertThat("Metadata was not removed",
+                loadedKeySet.lookup(testKey.getName()).getMeta(TypoError.Metadata.TYPO_INSERTION.getMetadata()).getName(),
+                nullValue());
+        assertThat("Strings are still the same after character injection",
+                loadedKeySet.lookup(testKey.getName()).getString(),
+                not(testKey.getString()));
         KeySet.printKeySet(loadedKeySet);
     }
 
@@ -80,12 +81,13 @@ class TypoErrorTest {
         KeySet.printKeySet(loadedKeySet);
         kdb.set(loadedKeySet, ROOT_KEY);
         injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
-        assertNull(loadedKeySet.lookup(testKey.getName())
+        assertThat("Metadata was not removed",
+                loadedKeySet.lookup(testKey.getName())
                         .getMeta(TypoError.Metadata.TYPO_DELETION.getMetadata()).getName(),
-                "Metadata was not removed");
-        assertNotEquals(loadedKeySet.lookup(testKey.getName()).getString(),
-                testKey.getString(),
-                "Strings are still the same after character deletion");
+                nullValue());
+        assertThat("Strings are still the same after character deletion",
+                loadedKeySet.lookup(testKey.getName()).getString(),
+                not(testKey.getString()));
         KeySet.printKeySet(loadedKeySet);
     }
 
@@ -98,15 +100,16 @@ class TypoErrorTest {
         kdb.set(loadedKeySet, ROOT_KEY);
         injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
         KeySet.printKeySet(loadedKeySet);
-        assertEquals(loadedKeySet.lookup(testKey.getName()).getString().length(),
-                testKey.getString().length(),
-                "Changed the length in change char execution");
-        assertNotEquals(loadedKeySet.lookup(testKey.getName()).getString(),
-                testKey.getString(),
-                "Strings are still the same after change char execution");
-        assertNull(loadedKeySet.lookup(testKey.getName())
-                        .getMeta(TypoError.Metadata.TYPO_CHANGE_CHAR.getMetadata()).getName(),
-                "Metadata was not removed");
+        assertThat("Changed the length in change char execution",
+                loadedKeySet.lookup(testKey.getName()).getString().length(),
+                is(testKey.getString().length()));
+        assertThat("Strings are still the same after change char execution",
+                loadedKeySet.lookup(testKey.getName()).getString(),
+                not(testKey.getString()));
+        assertThat("Metadata was not removed",
+                loadedKeySet.lookup(testKey.getName())
+                        .getMeta(TypoError.Metadata.TYPO_CHANGE_CHAR.getMetadata()).getName()
+                , nullValue());
     }
 
     @Test
@@ -119,15 +122,16 @@ class TypoErrorTest {
         injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
         KeySet.printKeySet(loadedKeySet);
 
-        assertNotEquals(loadedKeySet.lookup(testKey.getName()).getString().length(),
-                testKey.getString().length(),
-                "Changed the length in change char execution");
-        assertNotEquals(loadedKeySet.lookup(testKey.getName()).getString(),
-                testKey.getString(),
-                "Strings are still the same after change char execution");
-        assertNull(loadedKeySet.lookup(testKey.getName())
+        assertThat("Changed the length in change char execution",
+                loadedKeySet.lookup(testKey.getName()).getString().length(),
+                not(testKey.getString().length()));
+        assertThat("Strings are still the same after change char execution",
+                loadedKeySet.lookup(testKey.getName()).getString(),
+                not(testKey.getString()));
+        assertThat("Metadata was not removed",
+                loadedKeySet.lookup(testKey.getName())
                         .getMeta(TypoError.Metadata.TYPO_SPACE.getMetadata()).getName(),
-                "Metadata was not removed");
+                nullValue());
     }
 
     @Test
@@ -139,16 +143,17 @@ class TypoErrorTest {
         kdb.set(loadedKeySet, ROOT_KEY);
         injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
         KeySet.printKeySet(loadedKeySet);
-        assertNotEquals(loadedKeySet.lookup(testKey.getName()).getString(),
-                testKey.getString(),
-                "Strings are still the same after toggling case execution");
-        assertNull(loadedKeySet.lookup(testKey.getName())
+        assertThat("Strings are still the same after toggling case execution",
+                loadedKeySet.lookup(testKey.getName()).getString(),
+                not(testKey.getString()));
+        assertThat("Metadata was not removed",
+                loadedKeySet.lookup(testKey.getName())
                         .getMeta(TypoError.Metadata.TYPO_TOGGLE.getMetadata()).getName(),
-                "Metadata was not removed");
+                nullValue());
     }
 
 
-    @AfterEach
+    @After
     public void tearDown() throws KDB.KDBException {
         Util.cleanUp(loadedKeySet, kdb);
     }

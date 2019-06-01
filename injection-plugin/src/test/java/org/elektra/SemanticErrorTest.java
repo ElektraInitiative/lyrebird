@@ -2,9 +2,9 @@ package org.elektra;
 
 import org.elektra.errortypes.SemanticError;
 import org.elektra.errortypes.TypoError;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
@@ -16,7 +16,9 @@ import java.util.List;
 
 import static org.elektra.InjectionPlugin.ROOT_KEY;
 import static org.elektra.errortypes.SemanticError.Metadata.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertNull;
 
 class SemanticErrorTest {
 
@@ -30,13 +32,13 @@ class SemanticErrorTest {
     List<String> alternativeOptions;
 
 
-    @BeforeEach
+    @Before
     public void setUp() throws KDB.KDBException {
         injectionPlugin = new InjectionPlugin("user/tests/inject");
         kdb = injectionPlugin.kdb;
         loadedKeySet = KeySet.create();
         kdb.get(loadedKeySet, ROOT_KEY);
-        testKey = Key.create(ROOT_KEY +"/some/value", "abcdef");
+        testKey = Key.create(ROOT_KEY + "/some/value", "abcdef");
         loadedKeySet.append(testKey);
         alternativeOptions = new ArrayList<>();
         alternativeOptions.add("one");
@@ -46,9 +48,9 @@ class SemanticErrorTest {
 
     @Test
     public void semanticError_shouldWork() throws Exception {
-        testKey.setMeta(SEMANTIC_ERROR.getMetadata()+"/#0", alternativeOptions.get(0));
-        testKey.setMeta(SEMANTIC_ERROR.getMetadata()+"/#1", alternativeOptions.get(1));
-        testKey.setMeta(SEMANTIC_ERROR.getMetadata()+"/#2", alternativeOptions.get(2));
+        testKey.setMeta(SEMANTIC_ERROR.getMetadata() + "/#0", alternativeOptions.get(0));
+        testKey.setMeta(SEMANTIC_ERROR.getMetadata() + "/#1", alternativeOptions.get(1));
+        testKey.setMeta(SEMANTIC_ERROR.getMetadata() + "/#2", alternativeOptions.get(2));
         testKey.setMeta(InjectionPlugin.SEED_META, "411");
 
         KeySet.printKeySet(loadedKeySet);
@@ -57,21 +59,25 @@ class SemanticErrorTest {
         KeySet.printKeySet(loadedKeySet);
 
         String newString = loadedKeySet.lookup(testKey.getName()).getString();
-        assertTrue(alternativeOptions.stream().anyMatch(newString::equals),
-                "None of the provided values were picked in semantic error!");
-        assertNull(loadedKeySet.lookup(testKey.getName())
-                        .getMeta(SemanticError.Metadata.SEMANTIC_ERROR.getMetadata()+"/#0").getName(),
-                "Metadata (#0) was not removed");
-        assertNull(loadedKeySet.lookup(testKey.getName())
-                        .getMeta(SemanticError.Metadata.SEMANTIC_ERROR.getMetadata()+"/#1").getName(),
-                "Metadata (#1) was not removed");
-        assertNull(loadedKeySet.lookup(testKey.getName())
-                        .getMeta(SemanticError.Metadata.SEMANTIC_ERROR.getMetadata()+"/#2").getName(),
-                "Metadata (#2) was not removed");
+        assertThat("None of the provided values were picked in semantic error!",
+                alternativeOptions.stream().anyMatch(newString::equals),
+                is(true));
+        assertThat("Metadata (#0) was not removed",
+                loadedKeySet.lookup(testKey.getName())
+                        .getMeta(SemanticError.Metadata.SEMANTIC_ERROR.getMetadata() + "/#0").getName(),
+                nullValue());
+        assertThat("Metadata (#1) was not removed",
+                loadedKeySet.lookup(testKey.getName())
+                        .getMeta(SemanticError.Metadata.SEMANTIC_ERROR.getMetadata() + "/#1").getName(),
+                nullValue());
+        assertThat("Metadata (#2) was not removed",
+                loadedKeySet.lookup(testKey.getName())
+                        .getMeta(SemanticError.Metadata.SEMANTIC_ERROR.getMetadata() + "/#2").getName(),
+                nullValue());
     }
 
 
-    @AfterEach
+    @After
     public void tearDown() throws KDB.KDBException {
         Util.cleanUp(loadedKeySet, kdb);
     }

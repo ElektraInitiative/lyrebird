@@ -1,7 +1,7 @@
 package org.libelektra.lyrebid;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import org.junit.After;
+import org.junit.Test;
 import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
@@ -73,7 +73,7 @@ class PluginTests {
         Files.delete(path);
     }
 
-    @AfterEach
+    @After
     public void tearDown() {
 
     }

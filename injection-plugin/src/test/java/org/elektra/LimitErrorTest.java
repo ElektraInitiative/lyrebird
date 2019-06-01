@@ -1,8 +1,9 @@
 package org.elektra;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
@@ -12,8 +13,9 @@ import org.slf4j.LoggerFactory;
 import static org.elektra.InjectionPlugin.ROOT_KEY;
 import static org.elektra.errortypes.LimitError.Metadata.LIMIT_ERROR_MAX;
 import static org.elektra.errortypes.LimitError.Metadata.LIMIT_ERROR_MIN;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+
 
 class LimitErrorTest {
 
@@ -25,13 +27,13 @@ class LimitErrorTest {
     private Key testKey;
 
 
-    @BeforeEach
+    @Before
     public void setUp() throws KDB.KDBException {
         injectionPlugin = new InjectionPlugin("user/tests/inject");
         kdb = injectionPlugin.kdb;
         loadedKeySet = KeySet.create();
         kdb.get(loadedKeySet, ROOT_KEY);
-        testKey = Key.create(ROOT_KEY +"/some/value", "350");
+        testKey = Key.create(ROOT_KEY + "/some/value", "350");
         loadedKeySet.append(testKey);
     }
 
@@ -49,18 +51,21 @@ class LimitErrorTest {
         KeySet.printKeySet(loadedKeySet);
 
         String newString = loadedKeySet.lookup(testKey.getName()).getString();
-        assertTrue(newString.equals(minValue) || newString.equals(maxValue),
-                "Neither min nor max value was applied in limit error!");
-        assertNull(loadedKeySet.lookup(testKey.getName())
+        assertThat("Neither min nor max value was applied in limit error!",
+                newString.equals(minValue) || newString.equals(maxValue),
+                is(true));
+        assertThat("Metadata MIN was not removed",
+                loadedKeySet.lookup(testKey.getName())
                         .getMeta(LIMIT_ERROR_MIN.getMetadata()).getName(),
-                "Metadata MIN was not removed");
-        assertNull(loadedKeySet.lookup(testKey.getName())
+                nullValue());
+        assertThat("Metadata MAX was not removed",
+                loadedKeySet.lookup(testKey.getName())
                         .getMeta(LIMIT_ERROR_MAX.getMetadata()).getName(),
-                "Metadata MAX was not removed");
+                nullValue());
     }
 
 
-    @AfterEach
+    @After
     public void tearDown() throws KDB.KDBException {
         Util.cleanUp(loadedKeySet, kdb);
     }
