@@ -134,6 +134,11 @@ public class CassandraRunner implements ApplicationRunner {
         this.allowedErrorTypes = errorTypes;
     }
 
+    @Override
+    public void cleanUp() throws IOException {
+
+    }
+
     private static void stopTestNode() throws IOException, InterruptedException {
         //Stop Node
         List<String> command = new LinkedList<>();

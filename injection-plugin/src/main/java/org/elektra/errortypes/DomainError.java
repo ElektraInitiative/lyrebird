@@ -37,7 +37,7 @@ public class DomainError extends AbstractErrorType {
         set.append(key);
 
         if (allMetaArrayValues.size() == 0) {
-            LOG.warn("Cannot apply resource error without provided alternatives");
+            LOG.warn("Cannot apply domain error without provided alternatives");
             return set;
         }
 

@@ -33,6 +33,10 @@ public abstract class AbstractErrorType {
         return key;
     }
 
+    protected RandomizerSingelton.Randomizer getRandomizer() {
+        return RandomizerSingelton.getInstance();
+    }
+
     protected RandomizerSingelton.Randomizer getRandomizer(Key key) {
         RandomizerSingelton.Randomizer randomizer = RandomizerSingelton.getInstance();
         if (hasSeedSet(key)) {

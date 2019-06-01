@@ -5,16 +5,12 @@ import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.libelektra.Plugin;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
-import org.libelektra.lyrebird.runner.impl.CassandraRunner;
 import org.libelektra.lyrebird.runner.impl.LCDprocRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.elektra.Util;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.util.Locale;
 
 public class Main {
 
@@ -32,11 +28,13 @@ public class Main {
 //        CassandraRunner.startClusterIfNotUp();
 //        ApplicationRunner runner = new CassandraRunner();
         ApplicationRunner runner = new LCDprocRunner();
-        runner.resetConfiguration();
-        runner.start();
+//        runner.resetConfiguration();
+        runner.injectInConfiguration();
+//        runner.cleanUp();
+//        runner.start();
 //        LOG.info("Sleeping");
-        Thread.sleep(5000);
-        runner.stop();
+//        Thread.sleep(5000);
+//        runner.stop();
 //        LOG.info("{}", runner.getLogEntry());
 //        mainRun();
     }

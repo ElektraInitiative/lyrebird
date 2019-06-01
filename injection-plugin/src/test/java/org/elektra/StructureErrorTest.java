@@ -29,7 +29,7 @@ class StructureErrorTest {
 
     @BeforeEach
     public void setUp() throws KDB.KDBException {
-        injectionPlugin = new InjectionPlugin();
+        injectionPlugin = new InjectionPlugin("user/tests/inject");
         kdb = injectionPlugin.kdb;
         loadedKeySet = KeySet.create();
         kdb.get(loadedKeySet, ROOT_KEY);

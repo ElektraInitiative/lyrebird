@@ -36,8 +36,8 @@ public class LimitError extends AbstractErrorType {
         String min = key.getMeta(Metadata.LIMIT_ERROR_MIN.getMetadata()).getString();
         String max = key.getMeta(Metadata.LIMIT_ERROR_MAX.getMetadata()).getString();
 
-        if (isNull(min) || isNull(max)) {
-            LOG.warn("Either min or max value was not supplied!");
+        if (isNull(min) && isNull(max)) {
+            LOG.warn("Min or max value was not supplied!");
             return set;
         }
 
@@ -47,7 +47,7 @@ public class LimitError extends AbstractErrorType {
 
         int random = randomizer.getNextInt(2);
         String newValue;
-        if (random == 0) {
+        if (isNull(max) || random == 0) {
             newValue = min;
         } else {
             newValue = max;

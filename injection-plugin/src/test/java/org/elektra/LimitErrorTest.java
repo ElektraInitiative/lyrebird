@@ -1,6 +1,5 @@
 package org.elektra;
 
-import org.elektra.errortypes.DomainError;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,11 +9,9 @@ import org.libelektra.KeySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static org.elektra.InjectionPlugin.ROOT_KEY;
-import static org.elektra.errortypes.LimitError.Metadata.*;
+import static org.elektra.errortypes.LimitError.Metadata.LIMIT_ERROR_MAX;
+import static org.elektra.errortypes.LimitError.Metadata.LIMIT_ERROR_MIN;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -30,7 +27,7 @@ class LimitErrorTest {
 
     @BeforeEach
     public void setUp() throws KDB.KDBException {
-        injectionPlugin = new InjectionPlugin();
+        injectionPlugin = new InjectionPlugin("user/tests/inject");
         kdb = injectionPlugin.kdb;
         loadedKeySet = KeySet.create();
         kdb.get(loadedKeySet, ROOT_KEY);

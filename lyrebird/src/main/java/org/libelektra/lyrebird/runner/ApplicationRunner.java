@@ -21,4 +21,6 @@ public interface ApplicationRunner {
     LogEntry getLogEntry();
 
     void setErrorTypes(Set<ErrorType> errorTypes);
+
+    void cleanUp() throws IOException;
 }

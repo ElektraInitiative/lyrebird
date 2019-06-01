@@ -28,8 +28,8 @@ public class InjectionPlugin {
     private final DomainError domainError = new DomainError();
     private final LimitError limitError = new LimitError();
 
-    public InjectionPlugin() {
-        kdb = KDB.open(ROOT_KEY);
+    public InjectionPlugin(String RootKey) {
+        kdb = KDB.open(Key.create(RootKey));
     }
 
     public InjectionPlugin(String pluginName, Key errorKey) {
