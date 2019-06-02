@@ -1,60 +1,65 @@
 package org.libelektra.errortypes;
 
 import org.libelektra.InjectionMeta;
+import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
+import org.libelektra.service.KDBService;
+import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import static java.util.Objects.nonNull;
-import static org.libelektra.util.RandomizerSingelton.Randomizer;
-
+@Component
 public class TypoError extends AbstractErrorType {
 
     private final static Logger LOG = LoggerFactory.getLogger(TypoError.class);
     private final static char[] availableInsertionCharacters =
             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
+    private final KDBService kdbService;
+    public static int TYPE_ID = 4;
 
-    public KeySet applyTypoError(KeySet set, Key key) {
-        key.rewindMeta();
-        Key currentKey = key.currentMeta();
-        while (nonNull(currentKey.getName())) {
-            if (currentKey.getName().equals(Metadata.TYPO_TRANSPOSITION.getMetadata())) {
-                return transposition(set, key);
-            } else if (currentKey.getName().equals(Metadata.TYPO_CHANGE_CHAR.getMetadata())) {
-                return changeChar(set, key);
-            } else if (currentKey.getName().equals(Metadata.TYPO_DELETION.getMetadata())) {
-                return deletion(set, key);
-            } else if (currentKey.getName().equals(Metadata.TYPO_INSERTION.getMetadata())) {
-                return insertion(set, key);
-            } else if (currentKey.getName().equals(Metadata.TYPO_SPACE.getMetadata())) {
-                return space(set, key);
-            } else if (currentKey.getName().equals(Metadata.TYPO_TOGGLE.getMetadata())) {
-                return caseToggle(set, key);
-            }
-            currentKey = key.nextMeta();
+    @Autowired
+    public TypoError(RandomizerService randomizerService, KDBService kdbService) {
+        super(randomizerService);
+        this.kdbService = kdbService;
+    }
+
+    public KeySet applyTypoError(KeySet set, String injectPath, InjectionMeta injectionType) throws KDB.KDBException {
+        
+        if (injectionType.equals(Metadata.TYPO_TRANSPOSITION)) {
+            return transposition(set, injectPath);
+        } else if (injectionType.equals(Metadata.TYPO_CHANGE_CHAR)) {
+            return changeChar(set, injectPath);
+        } else if (injectionType.equals(Metadata.TYPO_DELETION)) {
+            return deletion(set, injectPath);
+        } else if (injectionType.equals(Metadata.TYPO_INSERTION)) {
+            return insertion(set, injectPath);
+        } else if (injectionType.equals(Metadata.TYPO_SPACE)) {
+            return space(set, injectPath);
+        } else if (injectionType.equals(Metadata.TYPO_TOGGLE)) {
+            return caseToggle(set, injectPath);
         }
+        
         return set;
     }
 
-    private KeySet transposition(KeySet set, Key key) {
-        LOG.debug("Applying Typo Error [transposition] to {}", key.getName());
-        String value = key.getString();
+    private KeySet transposition(KeySet set, String injectPath) throws KDB.KDBException {
+        LOG.debug("Applying Typo Error [transposition] to {}", injectPath);
+        Key keyToChange = getValueOrDefault(set, injectPath);
+        String value = keyToChange.getString();
         if (value.length() < 2) {
             LOG.warn("Cannot transpose a single character");
             return set;
         }
 
-        Randomizer randomizer = getRandomizer(key);
-        key = removeAffectingMeta(key, Metadata.TYPO_TRANSPOSITION.getMetadata());
-        set.append(key);
-
-        int charPosition = randomizer.getNextInt(value.length());
-        int otherPosition = randomizer.getNextInt(value.length());
+        int charPosition = randomizerService.getNextInt(value.length());
+        int otherPosition = randomizerService.getNextInt(value.length());
 
         //search for another position. Single character strings are excluded already
         while (otherPosition == charPosition) {
-            otherPosition = randomizer.getNextInt(value.length());
+            otherPosition = randomizerService.getNextInt(value.length());
         }
 
         StringBuilder sb = new StringBuilder(value);
@@ -63,92 +68,80 @@ public class TypoError extends AbstractErrorType {
         sb.setCharAt(charPosition, char2);
         sb.setCharAt(otherPosition, char1);
         String newValue = sb.toString();
-        key.setString(newValue);
+        keyToChange.setString(newValue);
 
         String message = String.format("Changing [%s ===> %s] on %s",
-                value, newValue, key.getName());
+                value, newValue, keyToChange.getName());
         LOG.debug("{}", message);
 
         return set;
     }
 
-    private KeySet insertion(KeySet set, Key key) {
-        LOG.debug("Applying Typo Error [insertion] to {}", key.getName());
-        String value = key.getString();
+    private KeySet insertion(KeySet set, String injectPath) {
+        LOG.debug("Applying Typo Error [insertion] to {}", injectPath);
+        Key keyToChange = getValueOrDefault(set, injectPath);
+        String value = keyToChange.getString();
 
-        Randomizer randomizer = getRandomizer(key);
-        key = removeAffectingMeta(key, Metadata.TYPO_INSERTION.getMetadata());
-        set.append(key);
-
-        char randomChar = availableInsertionCharacters[randomizer.getNextInt(availableInsertionCharacters.length)];
-        int position = randomizer.getNextInt(value.length()+1);
+        char randomChar = availableInsertionCharacters[randomizerService.getNextInt(availableInsertionCharacters.length)];
+        int position = randomizerService.getNextInt(value.length()+1);
 
         String newString = new StringBuilder(value).insert(position, randomChar).toString();
 
         String message = String.format("Inserted [%s ===> %s] on %s",
-                value, newString, key.getName());
+                value, newString, keyToChange.getName());
         LOG.debug(message);
 
-        key.setString(newString);
+        keyToChange.setString(newString);
 
         return set;
     }
 
-    private KeySet deletion(KeySet set, Key key) {
-        LOG.debug("Applying Typo Error [deletion] to {}", key.getName());
-        String value = key.getString();
-
-        Randomizer randomizer = getRandomizer(key);
-        key = removeAffectingMeta(key, Metadata.TYPO_DELETION.getMetadata());
-        set.append(key);
+    private KeySet deletion(KeySet set, String injectPath) {
+        LOG.debug("Applying Typo Error [deletion] to {}", injectPath);
+        Key keyToChange = getValueOrDefault(set, injectPath);
+        String value = keyToChange.getString();
 
         String newString = new StringBuilder(value)
-                .deleteCharAt(randomizer.getNextInt(value.length()))
+                .deleteCharAt(randomizerService.getNextInt(value.length()))
                 .toString();
 
         String message = String.format("Deletion [%s ===> %s] on %s",
-                value, newString, key.getName());
+                value, newString, keyToChange.getName());
         LOG.debug(message);
 
-        key.setString(newString);
+        keyToChange.setString(newString);
 
         return set;
     }
 
-    private KeySet changeChar(KeySet set, Key key) {
-        LOG.debug("Applying Typo Error [changeChar] to {}", key.getName());
-        String value = key.getString();
+    private KeySet changeChar(KeySet set, String injectPath) {
+        LOG.debug("Applying Typo Error [changeChar] to {}", injectPath);
+        Key keyToChange = getValueOrDefault(set, injectPath);
+        String value = keyToChange.getString();
 
-        Randomizer randomizer = getRandomizer(key);
-        key = removeAffectingMeta(key, Metadata.TYPO_CHANGE_CHAR.getMetadata());
-        set.append(key);
-
-        char randomChar = availableInsertionCharacters[randomizer.getNextInt(availableInsertionCharacters.length)];
-        int position = randomizer.getNextInt(value.length());
+        char randomChar = availableInsertionCharacters[randomizerService.getNextInt(availableInsertionCharacters.length)];
+        int position = randomizerService.getNextInt(value.length());
 
         StringBuilder sb = new StringBuilder(value);
         sb.setCharAt(position, randomChar);
 
         String newString = sb.toString();
         String message = String.format("Changing Char [%s ===> %s] on %s",
-                value, newString, key.getName());
+                value, newString, keyToChange.getName());
         LOG.debug(message);
 
-        key.setString(newString);
+        keyToChange.setString(newString);
         return set;
     }
 
-    private KeySet space(KeySet set, Key key) {
-        LOG.debug("Applying Typo Error [space] to {}", key.getName());
-        String value = key.getString();
-
-        Randomizer randomizer = getRandomizer(key);
-        key = removeAffectingMeta(key, Metadata.TYPO_SPACE.getMetadata());
-        set.append(key);
+    private KeySet space(KeySet set, String injectPath) {
+        LOG.debug("Applying Typo Error [space] to {}", injectPath);
+        Key keyToChange = getValueOrDefault(set, injectPath);
+        String value = keyToChange.getString();
 
         // +1 because we want at least one space
-        int precedingSpaces = randomizer.getNextInt(5)+1;
-        int trailingSpaces = randomizer.getNextInt(5)+1;
+        int precedingSpaces = randomizerService.getNextInt(5)+1;
+        int trailingSpaces = randomizerService.getNextInt(5)+1;
 
         StringBuilder sb = new StringBuilder(value);
         for (int i = 0; i < precedingSpaces; i++) {
@@ -160,21 +153,18 @@ public class TypoError extends AbstractErrorType {
 
         String newString = sb.toString();
         String message = String.format("Inserting space [%s ===> '%s'] on %s",
-                value, newString, key.getName());
+                value, newString, keyToChange.getName());
         LOG.debug(message);
 
-        key.setString(newString);
+        keyToChange.setString(newString);
 
         return set;
     }
 
-    private KeySet caseToggle(KeySet set, Key key) {
-        LOG.debug("Applying Typo Error [caseToggle] to {}", key.getName());
-        String value = key.getString();
-
-        Randomizer randomizer = getRandomizer(key);
-        key = removeAffectingMeta(key, Metadata.TYPO_TOGGLE.getMetadata());
-        set.append(key);
+    private KeySet caseToggle(KeySet set, String injectPath) {
+        LOG.debug("Applying Typo Error [caseToggle] to {}", injectPath);
+        Key keyToChange = getValueOrDefault(set, injectPath);
+        String value = keyToChange.getString();
 
         if (!value.matches(".*[a-zA-Z]+.*")) {
             LOG.warn("Cannot toggle non-alphabetical characters");
@@ -183,7 +173,7 @@ public class TypoError extends AbstractErrorType {
 
         int currentPos = 0;
         char[] valueAsArray = value.toCharArray();
-        int iterations = randomizer.getNextInt(value.length());
+        int iterations = randomizerService.getNextInt(value.length());
         while (true) {
             if (Character.isAlphabetic(valueAsArray[currentPos]) && iterations <= 0) {
                 char c = valueAsArray[currentPos];
@@ -202,10 +192,10 @@ public class TypoError extends AbstractErrorType {
         }
 
         String newString = String.valueOf(valueAsArray);
-        key.setString(newString);
+        keyToChange.setString(newString);
 
         String message = String.format("Toggle Case [%s ===> %s] on %s",
-                value, newString, key.getName());
+                value, newString, keyToChange.getName());
         LOG.debug("{}", message);
         return set;
     }
@@ -236,6 +226,10 @@ public class TypoError extends AbstractErrorType {
             }
             return false;
         }
+
     }
 
+    private Key getValueOrDefault(KeySet set, String injectPath) {
+        return set.lookup(injectPath);
+    }
 }

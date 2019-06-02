@@ -3,17 +3,26 @@ package org.libelektra.errortypes;
 import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
+import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static org.libelektra.util.RandomizerSingelton.Randomizer;
 
+@Component
 public class LimitError extends AbstractErrorType {
 
     private final static Logger LOG = LoggerFactory.getLogger(LimitError.class);
 
+    public static int TYPE_ID = 6;
+
+    @Autowired
+    public LimitError(RandomizerService randomizerService) {
+        super(randomizerService);
+    }
 
     public KeySet applyLimitError(KeySet set, Key key) {
         key.rewindMeta();
@@ -40,11 +49,10 @@ public class LimitError extends AbstractErrorType {
             return set;
         }
 
-        Randomizer randomizer = getRandomizer(key);
         key = removeAffectingMeta(key, Metadata.LIMIT_ERROR_MIN.getMetadata(), Metadata.LIMIT_ERROR_MAX.getMetadata());
         set.append(key);
 
-        int random = randomizer.getNextInt(2);
+        int random = randomizerService.getNextInt(2);
         String newValue;
         if (isNull(max) || random == 0) {
             newValue = min;

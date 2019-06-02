@@ -13,16 +13,32 @@ import javax.annotation.PreDestroy;
 public class KDBService {
 
     private final static Logger LOG = LoggerFactory.getLogger(KDBService.class);
-    private final KeySet allKeys;
+    private KeySet allKeys;
 
     private KDB kdb;
     public static String ROOT = "system";
+    public final String namespace;
 
     public KDBService() throws KDB.KDBException {
-        Key key = Key.create(ROOT);
+        this.namespace = ROOT;
+        initKDB(ROOT);
+    }
+
+    public KDBService(String namespace) throws KDB.KDBException {
+        this.namespace = namespace;
+        initKDB(namespace);
+    }
+
+    private void initKDB(String namespace) throws KDB.KDBException {
+        Key key = Key.create(namespace);
         kdb = KDB.open(key);
         allKeys = KeySet.create();
         kdb.get(allKeys, key);
+    }
+
+    public KeySet getAllKeys() {
+        allKeys.rewind();
+        return allKeys;
     }
 
     public KDB getInstance() {
@@ -38,8 +54,20 @@ public class KDBService {
         kdb.set(set, parentKey);
     }
 
+    public void set(KeySet set, String parentKey) throws KDB.KDBException {
+        kdb.set(set, Key.create(parentKey));
+    }
+
+    public void get(KeySet set, Key parentKey) throws KDB.KDBException {
+        kdb.get(set, parentKey);
+    }
+
+    public Key lookup(String lookup) throws KDB.KDBException {
+        return allKeys.lookup(lookup);
+    }
+
     @PreDestroy
-    public void cleanUp() {
+    public void close() {
         kdb.close();
     }
 

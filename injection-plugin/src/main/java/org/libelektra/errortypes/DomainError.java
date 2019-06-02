@@ -3,52 +3,55 @@ package org.libelektra.errortypes;
 import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
+import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 import static java.util.Objects.nonNull;
-import static org.libelektra.util.RandomizerSingelton.Randomizer;
 
+@Component
 public class DomainError extends AbstractErrorType {
 
     private final static Logger LOG = LoggerFactory.getLogger(DomainError.class);
 
+    public static int TYPE_ID = 5;
 
-    public KeySet applyDomainError(KeySet set, Key key) {
-        key.rewindMeta();
-        Key currentKey = key.currentMeta();
-        while (nonNull(currentKey.getName())) {
-            if (currentKey.getName().startsWith(Metadata.DOMAIN_ERROR.getMetadata())) {
-                return resourceError(set, key);
-            }
-            currentKey = key.nextMeta();
+    @Autowired
+    public DomainError(RandomizerService randomizerService) {
+        super(randomizerService);
+    }
+
+    public KeySet applyDomainError(KeySet set, Key injectKey, String injectPath, InjectionMeta injectionType) {
+        injectKey.rewindMeta();
+        if (injectionType.equals(Metadata.DOMAIN_ERROR)) {
+            return domainError(set, injectKey, injectPath);
         }
         return set;
     }
 
-    private KeySet resourceError(KeySet set, Key key) {
-        LOG.debug("Applying resource error to {}", key.getName());
+    private KeySet domainError(KeySet set, Key injectKey, String injectPath) {
+        LOG.debug("Applying domain error to {}", injectPath);
         String metadata = Metadata.DOMAIN_ERROR.getMetadata();
-        String value = key.getString();
-        List<String> allMetaArrayValues = extractMetaDataArray(key, metadata);
-        Randomizer randomizer = getRandomizer(key);
-        key = removeAffectingMetaArray(key, metadata);
-        set.append(key);
+        String value = injectKey.getString();
+        List<String> allMetaArrayValues = extractMetaDataArray(injectKey, metadata);
 
         if (allMetaArrayValues.size() == 0) {
             LOG.warn("Cannot apply domain error without provided alternatives");
             return set;
         }
 
-        int randomPick = randomizer.getNextInt(allMetaArrayValues.size());
+        int randomPick = randomizerService.getNextInt(allMetaArrayValues.size());
         String newValue = allMetaArrayValues.get(randomPick);
-        key.setString(newValue);
-        set.append(key);
+        Key newKey = Key.create(injectPath);
+        newKey.setString(newValue);
+        set.append(newKey);
 
         String message = String.format("Domain Error [%s ===> %s] on %s",
-                value, newValue, key.getName());
+                value, newValue, injectPath);
         LOG.debug(message);
 
         return set;

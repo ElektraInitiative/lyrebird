@@ -38,7 +38,7 @@ public class Main implements CommandLineRunner {
     public void run(String... args) throws Exception {
         runner.resetConfiguration();
         runner.injectInConfiguration();
-//        runner.cleanUp();
+//        runner.close();
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -51,7 +51,7 @@ public class Main implements CommandLineRunner {
 
 //        runner.resetConfiguration();
 
-//        runner.cleanUp();
+//        runner.close();
 //        runner.start();
 //        LOG.info("Sleeping");
 //        Thread.sleep(5000);

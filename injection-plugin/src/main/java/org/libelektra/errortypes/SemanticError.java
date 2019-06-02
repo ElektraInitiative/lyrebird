@@ -3,18 +3,26 @@ package org.libelektra.errortypes;
 import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
+import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 import static java.util.Objects.nonNull;
-import static org.libelektra.util.RandomizerSingelton.Randomizer;
 
+@Component
 public class SemanticError extends AbstractErrorType {
 
     private final static Logger LOG = LoggerFactory.getLogger(SemanticError.class);
+    public static int TYPE_ID = 2;
 
+    @Autowired
+    public SemanticError(RandomizerService randomizerService) {
+        super(randomizerService);
+    }
 
     public KeySet applySemanticError(KeySet set, Key key) {
         key.rewindMeta();
@@ -32,7 +40,6 @@ public class SemanticError extends AbstractErrorType {
         LOG.debug("Applying semantic error to {}", key.getName());
         String value = key.getString();
         List<String> allMetaArrayValues = extractMetaDataArray(key, Metadata.SEMANTIC_ERROR.getMetadata());
-        Randomizer randomizer = getRandomizer(key);
         key = removeAffectingMetaArray(key, Metadata.SEMANTIC_ERROR.getMetadata());
         set.append(key);
 
@@ -41,7 +48,7 @@ public class SemanticError extends AbstractErrorType {
             return set;
         }
 
-        int randomPick = randomizer.getNextInt(allMetaArrayValues.size());
+        int randomPick = randomizerService.getNextInt(allMetaArrayValues.size());
         String newValue = allMetaArrayValues.get(randomPick);
         key.setString(newValue);
         set.append(key);

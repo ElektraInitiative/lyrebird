@@ -4,32 +4,48 @@ import org.libelektra.errortypes.*;
 import org.libelektra.service.KDBService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
 
+@Component
 public class InjectionPlugin {
-
-    public static final String SEED_META ="inject/rand/seed";
 
     private final static Logger LOG = LoggerFactory.getLogger(InjectionPlugin.class);
 
     private static String name = "injection";
     public static Key ROOT_KEY = Key.create("user/injection/test");
 
-    private final StructureError structureError = new StructureError();
-    private final TypoError typoError = new TypoError();
-    private final SemanticError semanticError = new SemanticError();
-    private final ResourceError resourceError = new ResourceError();
-    private final DomainError domainError = new DomainError();
-    private final LimitError limitError = new LimitError();
+    private final StructureError structureError;
+    private final TypoError typoError;
+    private final SemanticError semanticError;
+    private final ResourceError resourceError;
+    private final DomainError domainError;
+    private final LimitError limitError;
 
     private final KDBService kdbService;
 
-    public InjectionPlugin(KDBService kdbService) {
+    @Autowired
+    public InjectionPlugin(StructureError structureError,
+                           TypoError typoError,
+                           SemanticError semanticError,
+                           ResourceError resourceError,
+                           DomainError domainError,
+                           LimitError limitError,
+                           KDBService kdbService) {
+        this.structureError = structureError;
+        this.typoError = typoError;
+        this.semanticError = semanticError;
+        this.resourceError = resourceError;
+        this.domainError = domainError;
+        this.limitError = limitError;
 
         this.kdbService = kdbService;
     }
@@ -38,27 +54,26 @@ public class InjectionPlugin {
         keySet.rewind();
 
 
-
-        if (hasStructureMetadata(injectKey)) {
-            keySet = structureError.applyStructureError(keySet, injectKey);
-        } else if (hasTypoMetadata(injectKey)) {
-            keySet = typoError.applyTypoError(keySet, injectKey);
-        } else if (hasSemanticMetadata(injectKey)) {
-            keySet = semanticError.applySemanticError(keySet, injectKey);
-        } else if (hasResourceMetadata(injectKey)) {
-            keySet = resourceError.applyResourceError(keySet, injectKey);
-        } else if (hasDomaincMetadata(injectKey)) {
-            keySet = domainError.applyDomainError(keySet, injectKey);
-        } else if (hasLimitMetadata(injectKey)) {
-            keySet = limitError.applyLimitError(keySet, injectKey);
-        }
-
-
         try {
+            if (hasStructureMetadata(injectKey)) {
+                keySet = structureError.applyStructureError(keySet, path, StructureError.Metadata.SECTION_REMOVE);
+            } else if (hasTypoMetadata(injectKey)) {
+                keySet = typoError.applyTypoError(keySet, path, TypoError.Metadata.TYPO_CHANGE_CHAR);
+            } else if (hasSemanticMetadata(injectKey)) {
+                keySet = semanticError.applySemanticError(keySet, injectKey);
+            } else if (hasResourceMetadata(injectKey)) {
+                keySet = resourceError.applyResourceError(keySet, injectKey);
+            } else if (hasDomaincMetadata(injectKey)) {
+                keySet = domainError.applyDomainError(keySet, injectKey, path, DomainError.Metadata.DOMAIN_ERROR);
+            } else if (hasLimitMetadata(injectKey)) {
+                keySet = limitError.applyLimitError(keySet, injectKey);
+            }
+
             kdbService.set(keySet, ROOT_KEY);
         } catch (KDB.KDBException e) {
             e.printStackTrace();
         }
+
 
         return 0;
     }
@@ -75,18 +90,38 @@ public class InjectionPlugin {
         if (types.isNull()) {
             return injectionMetaCollection;
         }
+        List<Integer> allTypesAsIntegers = Arrays.stream(types.getString().trim().split(","))
+                .map(String::trim)
+                .map(Integer::valueOf)
+                .collect(Collectors.toList());
 
-        if (hasSemanticMetadata(injectKey)) {
-            injectionMetaCollection.addAll(Arrays.asList(SemanticError.Metadata.values()));
+        if (allTypesAsIntegers.contains(SemanticError.TYPE_ID)) {
+            if (hasSemanticMetadata(injectKey)) {
+                injectionMetaCollection.addAll(Arrays.asList(SemanticError.Metadata.values()));
+            } else {
+                LOG.warn("No {} metadata found for key {} despite given int", "semantic", injectKey.getName());
+            }
         }
-        if (hasResourceMetadata(injectKey)) {
-            injectionMetaCollection.addAll(Arrays.asList(ResourceError.Metadata.values()));
+        if (allTypesAsIntegers.contains(ResourceError.TYPE_ID)) {
+            if (hasResourceMetadata(injectKey)) {
+                injectionMetaCollection.addAll(Arrays.asList(ResourceError.Metadata.values()));
+            } else {
+                LOG.warn("No {} metadata found for key {} despite given int", "resource", injectKey.getName());
+            }
         }
-        if (hasDomaincMetadata(injectKey)) {
-            injectionMetaCollection.addAll(Arrays.asList(DomainError.Metadata.values()));
+        if (allTypesAsIntegers.contains(DomainError.TYPE_ID)) {
+            if (hasDomaincMetadata(injectKey)) {
+                injectionMetaCollection.addAll(Arrays.asList(DomainError.Metadata.values()));
+            } else {
+                LOG.warn("No {} metadata found for key {} despite given int", "domain", injectKey.getName());
+            }
         }
-        if (hasLimitMetadata(injectKey)) {
-            injectionMetaCollection.addAll(Arrays.asList(LimitError.Metadata.values()));
+        if (allTypesAsIntegers.contains(LimitError.TYPE_ID)) {
+            if (hasLimitMetadata(injectKey)) {
+                injectionMetaCollection.addAll(Arrays.asList(LimitError.Metadata.values()));
+            } else {
+                LOG.warn("No {} metadata found for key {} despite given int", "limit", injectKey.getName());
+            }
         }
         return injectionMetaCollection;
     }
@@ -161,17 +196,6 @@ public class InjectionPlugin {
             currentKey = key.nextMeta();
         }
         return false;
-    }
-
-    public static boolean hasSeedSet(Key key) {
-        return nonNull(key.getMeta(SEED_META).getName());
-    }
-
-    public static int getSeedFromMeta(Key key) {
-        if (hasSeedSet(key)) {
-            return key.getMeta(SEED_META).getInteger();
-        }
-        return 0;
     }
 
 }

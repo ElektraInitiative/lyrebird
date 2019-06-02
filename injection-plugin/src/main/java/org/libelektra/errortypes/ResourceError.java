@@ -3,18 +3,27 @@ package org.libelektra.errortypes;
 import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
+import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 import static java.util.Objects.nonNull;
-import static org.libelektra.util.RandomizerSingelton.Randomizer;
 
+@Component
 public class ResourceError extends AbstractErrorType {
 
     private final static Logger LOG = LoggerFactory.getLogger(ResourceError.class);
 
+    public static int TYPE_ID = 3;
+
+    @Autowired
+    public ResourceError(RandomizerService randomizerService) {
+        super(randomizerService);
+    }
 
     public KeySet applyResourceError(KeySet set, Key key) {
         key.rewindMeta();
@@ -33,7 +42,6 @@ public class ResourceError extends AbstractErrorType {
         String metadata = Metadata.RESOURCE_ERROR.getMetadata();
         String value = key.getString();
         List<String> allMetaArrayValues = extractMetaDataArray(key, metadata);
-        Randomizer randomizer = getRandomizer(key);
         key = removeAffectingMetaArray(key, metadata);
         set.append(key);
 
@@ -42,7 +50,7 @@ public class ResourceError extends AbstractErrorType {
             return set;
         }
 
-        int randomPick = randomizer.getNextInt(allMetaArrayValues.size());
+        int randomPick = randomizerService.getNextInt(allMetaArrayValues.size());
         String newValue = allMetaArrayValues.get(randomPick);
         key.setString(newValue);
         set.append(key);

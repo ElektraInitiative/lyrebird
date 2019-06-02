@@ -10,10 +10,11 @@ import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
-import org.libelektra.util.RandomizerSingelton;
+import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -30,6 +31,7 @@ public class LCDprocRunner implements ApplicationRunner {
 
     private Set<ErrorType> allowedErrorTypes;
     private Process process;
+    private RandomizerService randomizerService;
 
     private SysLogListener sysLogListener;
     private Tailer tailer;
@@ -41,14 +43,18 @@ public class LCDprocRunner implements ApplicationRunner {
     public final static String LCDSERVER_INJECT_CONFIG = "lcdproc/LCDd-inject.ini";
     public final static String TEMP_RUN_CONFIG = "/tmp/lcdd-tmp.conf";
     public final static String TEMP_ERROR_CONFIG = "/tmp/lcdd-inject.conf";
-    public final static String KDB_LCDPROC_PATH = ELEKTRA_NAMESPACE+"/lcdproc";
+    public static String KDB_LCDPROC_PATH;
     public final static String KDB_LCDPROC_INJECT_PATH = ELEKTRA_NAMESPACE+"/inject/lcdproc";
 
     private KeySet errorConfigKeySet;
 
     @Autowired
-    public LCDprocRunner(KDBService kdbService) throws KDB.KDBException {
+    public LCDprocRunner(KDBService kdbService,
+                         RandomizerService randomizerService,
+                         @Value("${config.mountpoint}") String parentPath) throws KDB.KDBException {
+        KDB_LCDPROC_PATH = parentPath;
         this.kdbService = kdbService;
+        this.randomizerService = randomizerService;
         kdb = kdbService.getInstance();
         try {
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
@@ -90,7 +96,7 @@ public class LCDprocRunner implements ApplicationRunner {
 
     @Override
     public void injectInConfiguration() throws KDB.KDBException {
-        int nextRandom = RandomizerSingelton.getInstance().getNextInt(errorConfigKeySet.length());
+        int nextRandom = randomizerService.getNextInt(errorConfigKeySet.length());
         LOG.debug("nextRandom: {}", nextRandom);
         Key at = errorConfigKeySet.at(nextRandom);
         String keyToInject = at.getName().replace(KDB_LCDPROC_INJECT_PATH, KDB_LCDPROC_PATH);

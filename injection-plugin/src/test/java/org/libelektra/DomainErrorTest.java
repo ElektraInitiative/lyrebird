@@ -1,43 +1,36 @@
 package org.libelektra;
 
-import org.libelektra.errortypes.DomainError;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.libelektra.service.KDBService;
+import org.libelektra.errortypes.DomainError;
+import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.libelektra.InjectionPlugin.ROOT_KEY;
-import static org.libelektra.errortypes.DomainError.Metadata.DOMAIN_ERROR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.libelektra.errortypes.DomainError.Metadata.DOMAIN_ERROR;
 
-public class DomainErrorTest {
+public class DomainErrorTest extends AbstractErrorTest {
 
     private final static Logger LOG = LoggerFactory.getLogger(DomainErrorTest.class);
 
-    private InjectionPlugin injectionPlugin;
-    private KDB kdb;
+    private DomainError domainError;
     private KeySet loadedKeySet;
-    private Key testKey;
+    private Key injectKey;
 
     List<String> alternativeOptions;
 
-
     @Before
     public void setUp() throws KDB.KDBException {
-        KDBService kdbService = new KDBService();
-        injectionPlugin = new InjectionPlugin(kdbService);
-        kdb = kdbService.getInstance();
+        domainError = new DomainError(new RandomizerService(100));
         loadedKeySet = KeySet.create();
-        kdb.get(loadedKeySet, ROOT_KEY);
-        testKey = Key.create(ROOT_KEY + "/some/value", "myDomain1");
-        loadedKeySet.append(testKey);
+        kdbService.get(loadedKeySet, Key.create(TEST_NAMESPACE));
+        injectKey = Key.create(INJECT_NAMESPACE + "/some/value", "validDomain");
+        loadedKeySet.append(injectKey);
         alternativeOptions = new ArrayList<>();
         alternativeOptions.add("myDomain1");
         alternativeOptions.add("myDomain2");
@@ -46,38 +39,19 @@ public class DomainErrorTest {
 
     @Test
     public void domainError_shouldWork() throws Exception {
-        testKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#0", alternativeOptions.get(0));
-        testKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#1", alternativeOptions.get(1));
-        testKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#2", alternativeOptions.get(2));
-        testKey.setMeta(InjectionPlugin.SEED_META, "411");
+        injectKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#0", alternativeOptions.get(0));
+        injectKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#1", alternativeOptions.get(1));
+        injectKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#2", alternativeOptions.get(2));
 
         KeySet.printKeySet(loadedKeySet);
-        kdb.set(loadedKeySet, ROOT_KEY);
-        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY, "test");
+        KeySet returnedSet = domainError.applyDomainError(loadedKeySet, injectKey, APPLY_NAMESPACE + "/domain", DOMAIN_ERROR);
         KeySet.printKeySet(loadedKeySet);
+        kdbService.set(returnedSet, APPLY_NAMESPACE);
 
-        String newString = loadedKeySet.lookup(testKey.getName()).getString();
-        assertThat("None of the provided values were picked in domain error!",
+        String newString = returnedSet.lookup(APPLY_NAMESPACE + "/domain").getString();
+        assertThat("None of the provided values were picked in domain error",
                 alternativeOptions.stream().anyMatch(newString::equals),
                 is(true));
-        assertThat("Metadata (#0) was not removed",
-                loadedKeySet.lookup(testKey.getName())
-                        .getMeta(DomainError.Metadata.DOMAIN_ERROR.getMetadata() + "/#0").getName(),
-                nullValue());
-        assertThat("Metadata (#1) was not removed",
-                loadedKeySet.lookup(testKey.getName())
-                        .getMeta(DomainError.Metadata.DOMAIN_ERROR.getMetadata() + "/#1").getName(),
-                nullValue());
-        assertThat("Metadata (#2) was not removed",
-                loadedKeySet.lookup(testKey.getName())
-                        .getMeta(DomainError.Metadata.DOMAIN_ERROR.getMetadata() + "/#2").getName(),
-                nullValue());
-    }
-
-
-    @After
-    public void tearDown() throws KDB.KDBException {
-        Util.cleanUp(loadedKeySet, kdb);
     }
 
 }
