@@ -1,10 +1,8 @@
 package org.libelektra.lyrebird.runner.impl;
 
-import org.apache.commons.io.input.TailerListener;
 import org.apache.commons.io.input.TailerListenerAdapter;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class LogListener extends TailerListenerAdapter {

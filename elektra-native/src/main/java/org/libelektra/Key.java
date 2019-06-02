@@ -4,8 +4,6 @@ import com.sun.jna.Pointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
-
 import static java.util.Objects.nonNull;
 
 /**

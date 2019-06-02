@@ -1,10 +1,13 @@
 package org.libelektra;
 
 import org.libelektra.errortypes.*;
+import org.libelektra.service.KDBService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 
 import static java.util.Objects.nonNull;
 
@@ -16,7 +19,6 @@ public class InjectionPlugin {
 
     private static String name = "injection";
     public static Key ROOT_KEY = Key.create("user/injection/test");
-    public KDB kdb;
 
     private final StructureError structureError = new StructureError();
     private final TypoError typoError = new TypoError();
@@ -25,51 +27,35 @@ public class InjectionPlugin {
     private final DomainError domainError = new DomainError();
     private final LimitError limitError = new LimitError();
 
-    public InjectionPlugin(String RootKey) {
-        kdb = KDB.open(Key.create(RootKey));
+    private final KDBService kdbService;
+
+    public InjectionPlugin(KDBService kdbService) {
+
+        this.kdbService = kdbService;
     }
 
-    public InjectionPlugin(String pluginName, Key errorKey) {
-    }
-
-    public InjectionPlugin(String pluginName, KeySet modules, KeySet config, Key errorKey) {
-
-    }
-
-    public KeySet getConfig() {
-        return KeySet.create();
-    }
-
-    public int kdbOpen(Key errorKey) {
-        return 0;
-    }
-
-    public int kdbClose(Key errorKey) {
-        return 0;
-    }
-
-    public int kdbSet(KeySet keySet, Key errorKey) {
+    public int kdbSet(KeySet keySet, Key injectKey, String path) {
         keySet.rewind();
-        Iterator<Key> iterator = keySet.iterator();
-        while (iterator.hasNext()) {
-            Key current = iterator.next();
-            if (hasStructureMetadata(current)) {
-                keySet = structureError.applyStructureError(keySet, current);
-            } else if (hasTypoMetadata(current)) {
-                keySet = typoError.applyTypoError(keySet, current);
-            } else if (hasSemanticMetadata(current)) {
-                keySet = semanticError.applySemanticError(keySet, current);
-            } else if (hasResourceMetadata(current)) {
-                keySet = resourceError.applyResourceError(keySet, current);
-            } else if (hasDomaincMetadata(current)) {
-                keySet = domainError.applyDomainError(keySet, current);
-            } else if (hasLimitMetadata(current)) {
-                keySet = limitError.applyLimitError(keySet, current);
-            }
+
+
+
+        if (hasStructureMetadata(injectKey)) {
+            keySet = structureError.applyStructureError(keySet, injectKey);
+        } else if (hasTypoMetadata(injectKey)) {
+            keySet = typoError.applyTypoError(keySet, injectKey);
+        } else if (hasSemanticMetadata(injectKey)) {
+            keySet = semanticError.applySemanticError(keySet, injectKey);
+        } else if (hasResourceMetadata(injectKey)) {
+            keySet = resourceError.applyResourceError(keySet, injectKey);
+        } else if (hasDomaincMetadata(injectKey)) {
+            keySet = domainError.applyDomainError(keySet, injectKey);
+        } else if (hasLimitMetadata(injectKey)) {
+            keySet = limitError.applyLimitError(keySet, injectKey);
         }
 
+
         try {
-            kdb.set(keySet, ROOT_KEY);
+            kdbService.set(keySet, ROOT_KEY);
         } catch (KDB.KDBException e) {
             e.printStackTrace();
         }
@@ -77,18 +63,32 @@ public class InjectionPlugin {
         return 0;
     }
 
-    public int kdbGet(KeySet keySet, Key errorKey) {
-        keySet.rewind();
-        return 0;
-    }
-
-    public int kdbError(KeySet keySet, Key errorKey) {
-        keySet.rewind();
-        return 0;
-    }
-
     public String getName() {
         return name;
+    }
+
+    private Collection<InjectionMeta> getAllPossibleInjections(Key injectKey) {
+        Collection<InjectionMeta> injectionMetaCollection = new ArrayList<>();
+        injectionMetaCollection.addAll(Arrays.asList(StructureError.Metadata.values()));
+        injectionMetaCollection.addAll(Arrays.asList(TypoError.Metadata.values()));
+        Key types = injectKey.getMeta("types");
+        if (types.isNull()) {
+            return injectionMetaCollection;
+        }
+
+        if (hasSemanticMetadata(injectKey)) {
+            injectionMetaCollection.addAll(Arrays.asList(SemanticError.Metadata.values()));
+        }
+        if (hasResourceMetadata(injectKey)) {
+            injectionMetaCollection.addAll(Arrays.asList(ResourceError.Metadata.values()));
+        }
+        if (hasDomaincMetadata(injectKey)) {
+            injectionMetaCollection.addAll(Arrays.asList(DomainError.Metadata.values()));
+        }
+        if (hasLimitMetadata(injectKey)) {
+            injectionMetaCollection.addAll(Arrays.asList(LimitError.Metadata.values()));
+        }
+        return injectionMetaCollection;
     }
 
     private boolean hasLimitMetadata(Key key) {

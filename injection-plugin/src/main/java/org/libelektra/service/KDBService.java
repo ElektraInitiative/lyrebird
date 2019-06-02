@@ -29,19 +29,25 @@ public class KDBService {
         return kdb;
     }
 
-    public void printBelowPath(String path) {
-        LOG.debug("Printing KeySet below {}", path);
-        KeySet toPrint = getKeySetBelowPath(path);
-        KeySet.printKeySet(toPrint);
-    }
-
     public KeySet getKeySetBelowPath(String path) {
         Key parentKey = Key.create(path);
         return allKeys.dup().cut(parentKey);
     }
 
+    public void set(KeySet set, Key parentKey) throws KDB.KDBException {
+        kdb.set(set, parentKey);
+    }
+
     @PreDestroy
     public void cleanUp() {
         kdb.close();
+    }
+
+    /** DEBUG HELPERS **/
+
+    public void printBelowPath(String path) {
+        LOG.debug("Printing KeySet below {}", path);
+        KeySet toPrint = getKeySetBelowPath(path);
+        KeySet.printKeySet(toPrint);
     }
 }

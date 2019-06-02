@@ -1,5 +1,6 @@
 package org.libelektra.errortypes;
 
+import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.slf4j.Logger;
@@ -52,7 +53,7 @@ public class SemanticError extends AbstractErrorType {
         return set;
     }
 
-    public static enum Metadata {
+    public static enum Metadata implements InjectionMeta {
         SEMANTIC_ERROR("inject/semantic");
 
         private final String metadata;

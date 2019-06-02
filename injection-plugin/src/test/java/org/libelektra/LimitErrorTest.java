@@ -4,6 +4,7 @@ package org.libelektra;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.libelektra.service.KDBService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +15,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 
-class LimitErrorTest {
+public class LimitErrorTest {
 
     private final static Logger LOG = LoggerFactory.getLogger(LimitErrorTest.class);
 
@@ -26,8 +27,9 @@ class LimitErrorTest {
 
     @Before
     public void setUp() throws KDB.KDBException {
-        injectionPlugin = new InjectionPlugin("user/tests/inject");
-        kdb = injectionPlugin.kdb;
+        KDBService kdbService = new KDBService();
+        injectionPlugin = new InjectionPlugin(kdbService);
+        kdb = kdbService.getInstance();
         loadedKeySet = KeySet.create();
         kdb.get(loadedKeySet, ROOT_KEY);
         testKey = Key.create(ROOT_KEY + "/some/value", "350");
@@ -44,7 +46,7 @@ class LimitErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         kdb.set(loadedKeySet, ROOT_KEY);
-        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
+        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY, "user/tests/injectplugin");
         KeySet.printKeySet(loadedKeySet);
 
         String newString = loadedKeySet.lookup(testKey.getName()).getString();

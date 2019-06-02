@@ -1,5 +1,6 @@
 package org.libelektra.errortypes;
 
+import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.slf4j.Logger;
@@ -62,7 +63,7 @@ public class LimitError extends AbstractErrorType {
         return set;
     }
 
-    public static enum Metadata {
+    public static enum Metadata implements InjectionMeta {
         LIMIT_ERROR_MIN("inject/limit/min"),
         LIMIT_ERROR_MAX("inject/limit/max");
 

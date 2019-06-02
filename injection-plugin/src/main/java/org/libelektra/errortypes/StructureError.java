@@ -1,5 +1,6 @@
 package org.libelektra.errortypes;
 
+import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 
@@ -154,7 +155,7 @@ public class StructureError extends AbstractErrorType{
         return extractedKSwithNewRoot;
     }
 
-    public static enum Metadata {
+    public static enum Metadata implements InjectionMeta {
         SECTION_REMOVE("inject/structure/section/remove"),
         SECTION_REALLOCATE("inject/structure/section/reallocate"),
         SECTION_DUPLICATE("inject/structure/section/duplicate");

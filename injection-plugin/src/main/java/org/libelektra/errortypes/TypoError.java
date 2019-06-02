@@ -1,5 +1,6 @@
 package org.libelektra.errortypes;
 
+import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.slf4j.Logger;
@@ -209,7 +210,7 @@ public class TypoError extends AbstractErrorType {
         return set;
     }
 
-    public static enum Metadata {
+    public static enum Metadata implements InjectionMeta {
         TYPO_TRANSPOSITION("inject/typo/transposition"),
         TYPO_INSERTION("inject/typo/insertion"),
         TYPO_DELETION("inject/typo/deletion"),

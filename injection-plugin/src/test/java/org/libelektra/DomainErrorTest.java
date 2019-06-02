@@ -4,6 +4,7 @@ import org.libelektra.errortypes.DomainError;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.libelektra.service.KDBService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
-class DomainErrorTest {
+public class DomainErrorTest {
 
     private final static Logger LOG = LoggerFactory.getLogger(DomainErrorTest.class);
 
@@ -30,8 +31,9 @@ class DomainErrorTest {
 
     @Before
     public void setUp() throws KDB.KDBException {
-        injectionPlugin = new InjectionPlugin("user/tests/inject");
-        kdb = injectionPlugin.kdb;
+        KDBService kdbService = new KDBService();
+        injectionPlugin = new InjectionPlugin(kdbService);
+        kdb = kdbService.getInstance();
         loadedKeySet = KeySet.create();
         kdb.get(loadedKeySet, ROOT_KEY);
         testKey = Key.create(ROOT_KEY + "/some/value", "myDomain1");
@@ -51,7 +53,7 @@ class DomainErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         kdb.set(loadedKeySet, ROOT_KEY);
-        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
+        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY, "test");
         KeySet.printKeySet(loadedKeySet);
 
         String newString = loadedKeySet.lookup(testKey.getName()).getString();

@@ -4,6 +4,7 @@ import org.libelektra.errortypes.TypoError;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.libelektra.service.KDBService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +13,7 @@ import static org.libelektra.errortypes.TypoError.Metadata.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-class TypoErrorTest {
+public class TypoErrorTest {
 
     private final static Logger LOG = LoggerFactory.getLogger(TypoErrorTest.class);
 
@@ -24,8 +25,9 @@ class TypoErrorTest {
 
     @Before
     public void setUp() throws KDB.KDBException {
-        injectionPlugin = new InjectionPlugin("user/tests/inject");
-        kdb = injectionPlugin.kdb;
+        KDBService kdbService = new KDBService();
+        injectionPlugin = new InjectionPlugin(kdbService);
+        kdb = kdbService.getInstance();
         loadedKeySet = KeySet.create();
         kdb.get(loadedKeySet, ROOT_KEY);
         testKey = Key.create(ROOT_KEY +"/some/value", "abcdef");
@@ -39,7 +41,7 @@ class TypoErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         kdb.set(loadedKeySet, ROOT_KEY);
-        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
+        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY, "user/tests/injectplugin");
         assertThat("Changed the length in transposition",
                 loadedKeySet.lookup(testKey.getName()).getString().length(),
                 is(testKey.getString().length()));
@@ -60,7 +62,7 @@ class TypoErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         kdb.set(loadedKeySet, ROOT_KEY);
-        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
+        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY, "user/tests/injectplugin");
         assertThat("Metadata was not removed",
                 loadedKeySet.lookup(testKey.getName()).getMeta(TypoError.Metadata.TYPO_INSERTION.getMetadata()).getName(),
                 nullValue());
@@ -77,7 +79,7 @@ class TypoErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         kdb.set(loadedKeySet, ROOT_KEY);
-        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
+        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY, "user/tests/injectplugin");
         assertThat("Metadata was not removed",
                 loadedKeySet.lookup(testKey.getName())
                         .getMeta(TypoError.Metadata.TYPO_DELETION.getMetadata()).getName(),
@@ -95,7 +97,7 @@ class TypoErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         kdb.set(loadedKeySet, ROOT_KEY);
-        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
+        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY, "user/tests/injectplugin");
         KeySet.printKeySet(loadedKeySet);
         assertThat("Changed the length in change char execution",
                 loadedKeySet.lookup(testKey.getName()).getString().length(),
@@ -116,7 +118,7 @@ class TypoErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         kdb.set(loadedKeySet, ROOT_KEY);
-        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
+        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY, "user/tests/injectplugin");
         KeySet.printKeySet(loadedKeySet);
 
         assertThat("Changed the length in change char execution",
@@ -138,7 +140,7 @@ class TypoErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         kdb.set(loadedKeySet, ROOT_KEY);
-        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY);
+        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY, "user/tests/injectplugin");
         KeySet.printKeySet(loadedKeySet);
         assertThat("Strings are still the same after toggling case execution",
                 loadedKeySet.lookup(testKey.getName()).getString(),

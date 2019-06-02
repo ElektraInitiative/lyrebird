@@ -1,5 +1,6 @@
 package org.libelektra.errortypes;
 
+import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.slf4j.Logger;
@@ -53,7 +54,7 @@ public class DomainError extends AbstractErrorType {
         return set;
     }
 
-    public static enum Metadata {
+    public static enum Metadata implements InjectionMeta {
         DOMAIN_ERROR("inject/domain");
 
         private final String metadata;
