@@ -67,7 +67,7 @@ public class InjectionPlugin {
         return name;
     }
 
-    private Collection<InjectionMeta> getAllPossibleInjections(Key injectKey) {
+    Collection<InjectionMeta> getAllPossibleInjections(Key injectKey) {
         Collection<InjectionMeta> injectionMetaCollection = new ArrayList<>();
         injectionMetaCollection.addAll(Arrays.asList(StructureError.Metadata.values()));
         injectionMetaCollection.addAll(Arrays.asList(TypoError.Metadata.values()));
