@@ -26,28 +26,28 @@ public class TypoError extends AbstractErrorType {
         this.kdbService = kdbService;
     }
 
-    public KeySet applyTypoError(KeySet set, String injectPath, InjectionMeta injectionType) throws KDB.KDBException {
+    public KeySet applyTypoError(KeySet set, String injectPath, String defaultValue, InjectionMeta injectionType) throws KDB.KDBException {
         
         if (injectionType.equals(Metadata.TYPO_TRANSPOSITION)) {
-            return transposition(set, injectPath);
+            return transposition(set, injectPath, defaultValue);
         } else if (injectionType.equals(Metadata.TYPO_CHANGE_CHAR)) {
-            return changeChar(set, injectPath);
+            return changeChar(set, injectPath, defaultValue);
         } else if (injectionType.equals(Metadata.TYPO_DELETION)) {
-            return deletion(set, injectPath);
+            return deletion(set, injectPath, defaultValue);
         } else if (injectionType.equals(Metadata.TYPO_INSERTION)) {
-            return insertion(set, injectPath);
+            return insertion(set, injectPath, defaultValue);
         } else if (injectionType.equals(Metadata.TYPO_SPACE)) {
-            return space(set, injectPath);
+            return space(set, injectPath, defaultValue);
         } else if (injectionType.equals(Metadata.TYPO_TOGGLE)) {
-            return caseToggle(set, injectPath);
+            return caseToggle(set, injectPath, defaultValue);
         }
         
         return set;
     }
 
-    private KeySet transposition(KeySet set, String injectPath) throws KDB.KDBException {
+    private KeySet transposition(KeySet set, String injectPath, String defaultValue) throws KDB.KDBException {
         LOG.debug("Applying Typo Error [transposition] to {}", injectPath);
-        Key keyToChange = getValueOrDefault(set, injectPath);
+        Key keyToChange = getValueOrDefault(set, injectPath, defaultValue);
         String value = keyToChange.getString();
         if (value.length() < 2) {
             LOG.warn("Cannot transpose a single character");
@@ -73,13 +73,13 @@ public class TypoError extends AbstractErrorType {
         String message = String.format("Changing [%s ===> %s] on %s",
                 value, newValue, keyToChange.getName());
         LOG.debug("{}", message);
-
+        set.append(keyToChange);
         return set;
     }
 
-    private KeySet insertion(KeySet set, String injectPath) {
+    private KeySet insertion(KeySet set, String injectPath, String defaultValue) {
         LOG.debug("Applying Typo Error [insertion] to {}", injectPath);
-        Key keyToChange = getValueOrDefault(set, injectPath);
+        Key keyToChange = getValueOrDefault(set, injectPath, defaultValue);
         String value = keyToChange.getString();
 
         char randomChar = availableInsertionCharacters[randomizerService.getNextInt(availableInsertionCharacters.length)];
@@ -92,13 +92,13 @@ public class TypoError extends AbstractErrorType {
         LOG.debug(message);
 
         keyToChange.setString(newString);
-
+        set.append(keyToChange);
         return set;
     }
 
-    private KeySet deletion(KeySet set, String injectPath) {
+    private KeySet deletion(KeySet set, String injectPath, String defaultValue) {
         LOG.debug("Applying Typo Error [deletion] to {}", injectPath);
-        Key keyToChange = getValueOrDefault(set, injectPath);
+        Key keyToChange = getValueOrDefault(set, injectPath, defaultValue);
         String value = keyToChange.getString();
 
         String newString = new StringBuilder(value)
@@ -110,13 +110,13 @@ public class TypoError extends AbstractErrorType {
         LOG.debug(message);
 
         keyToChange.setString(newString);
-
+        set.append(keyToChange);
         return set;
     }
 
-    private KeySet changeChar(KeySet set, String injectPath) {
+    private KeySet changeChar(KeySet set, String injectPath, String defaultValue) {
         LOG.debug("Applying Typo Error [changeChar] to {}", injectPath);
-        Key keyToChange = getValueOrDefault(set, injectPath);
+        Key keyToChange = getValueOrDefault(set, injectPath, defaultValue);
         String value = keyToChange.getString();
 
         char randomChar = availableInsertionCharacters[randomizerService.getNextInt(availableInsertionCharacters.length)];
@@ -131,12 +131,13 @@ public class TypoError extends AbstractErrorType {
         LOG.debug(message);
 
         keyToChange.setString(newString);
+        set.append(keyToChange);
         return set;
     }
 
-    private KeySet space(KeySet set, String injectPath) {
+    private KeySet space(KeySet set, String injectPath, String defaultValue) {
         LOG.debug("Applying Typo Error [space] to {}", injectPath);
-        Key keyToChange = getValueOrDefault(set, injectPath);
+        Key keyToChange = getValueOrDefault(set, injectPath, defaultValue);
         String value = keyToChange.getString();
 
         // +1 because we want at least one space
@@ -157,13 +158,13 @@ public class TypoError extends AbstractErrorType {
         LOG.debug(message);
 
         keyToChange.setString(newString);
-
+        set.append(keyToChange);
         return set;
     }
 
-    private KeySet caseToggle(KeySet set, String injectPath) {
+    private KeySet caseToggle(KeySet set, String injectPath, String defaultValue) {
         LOG.debug("Applying Typo Error [caseToggle] to {}", injectPath);
-        Key keyToChange = getValueOrDefault(set, injectPath);
+        Key keyToChange = getValueOrDefault(set, injectPath, defaultValue);
         String value = keyToChange.getString();
 
         if (!value.matches(".*[a-zA-Z]+.*")) {
@@ -197,6 +198,7 @@ public class TypoError extends AbstractErrorType {
         String message = String.format("Toggle Case [%s ===> %s] on %s",
                 value, newString, keyToChange.getName());
         LOG.debug("{}", message);
+        set.append(keyToChange);
         return set;
     }
 
@@ -229,7 +231,11 @@ public class TypoError extends AbstractErrorType {
 
     }
 
-    private Key getValueOrDefault(KeySet set, String injectPath) {
-        return set.lookup(injectPath);
+    private Key getValueOrDefault(KeySet set, String injectPath, String defaultValue) {
+        Key lookup = set.lookup(injectPath);
+        if (lookup.isNull()) {
+            return Key.create(injectPath, defaultValue);
+        }
+        return lookup;
     }
 }

@@ -36,7 +36,7 @@ public class TypoErrorTest extends AbstractErrorTest {
         KeySet.printKeySet(loadedKeySet);
         String startString = loadedKeySet.lookup(APPLY_NAMESPACE + "/some/value").getString();
         KeySet returnedSet = typoError.applyTypoError(loadedKeySet, APPLY_NAMESPACE + "/some/value",
-                TypoError.Metadata.TYPO_TRANSPOSITION);
+                "abcdef", TypoError.Metadata.TYPO_TRANSPOSITION);
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
@@ -55,7 +55,7 @@ public class TypoErrorTest extends AbstractErrorTest {
         KeySet.printKeySet(loadedKeySet);
         String startString = loadedKeySet.lookup(APPLY_NAMESPACE + "/some/value").getString();
         KeySet returnedSet = typoError.applyTypoError(loadedKeySet, APPLY_NAMESPACE + "/some/value",
-                TypoError.Metadata.TYPO_INSERTION);
+                "abcdef", TypoError.Metadata.TYPO_INSERTION);
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
@@ -74,7 +74,7 @@ public class TypoErrorTest extends AbstractErrorTest {
         KeySet.printKeySet(loadedKeySet);
         String startString = loadedKeySet.lookup(APPLY_NAMESPACE + "/some/value").getString();
         KeySet returnedSet = typoError.applyTypoError(loadedKeySet, APPLY_NAMESPACE + "/some/value",
-                TypoError.Metadata.TYPO_DELETION);
+                "abcdef", TypoError.Metadata.TYPO_DELETION);
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
@@ -91,7 +91,7 @@ public class TypoErrorTest extends AbstractErrorTest {
         KeySet.printKeySet(loadedKeySet);
         String startString = loadedKeySet.lookup(APPLY_NAMESPACE + "/some/value").getString();
         KeySet returnedSet = typoError.applyTypoError(loadedKeySet, APPLY_NAMESPACE + "/some/value",
-                TypoError.Metadata.TYPO_CHANGE_CHAR);
+                "abcdef", TypoError.Metadata.TYPO_CHANGE_CHAR);
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
@@ -108,7 +108,7 @@ public class TypoErrorTest extends AbstractErrorTest {
         KeySet.printKeySet(loadedKeySet);
         String startString = loadedKeySet.lookup(APPLY_NAMESPACE + "/some/value").getString();
         KeySet returnedSet = typoError.applyTypoError(loadedKeySet, APPLY_NAMESPACE + "/some/value",
-                TypoError.Metadata.TYPO_SPACE);
+                "abcdef", TypoError.Metadata.TYPO_SPACE);
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
@@ -126,13 +126,29 @@ public class TypoErrorTest extends AbstractErrorTest {
         KeySet.printKeySet(loadedKeySet);
         String startString = loadedKeySet.lookup(APPLY_NAMESPACE + "/some/value").getString();
         KeySet returnedSet = typoError.applyTypoError(loadedKeySet, APPLY_NAMESPACE + "/some/value",
-                TypoError.Metadata.TYPO_TOGGLE);
+                "abcdef", TypoError.Metadata.TYPO_TOGGLE);
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
         assertThat("Strings are still the same after toggling case execution",
                 startString,
                 not(newString));
+    }
+
+    @Test
+    public void noGivenValueTakesDefault_shouldWork() throws Exception {
+
+        KeySet emptyKeySet = KeySet.create();
+        KeySet.printKeySet(emptyKeySet);
+        String defaultValue = "abcdef";
+        KeySet returnedSet = typoError.applyTypoError(emptyKeySet, APPLY_NAMESPACE + "/some/value",
+                defaultValue, TypoError.Metadata.TYPO_DELETION);
+        KeySet.printKeySet(returnedSet);
+        kdbService.set(returnedSet, APPLY_NAMESPACE);
+        String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
+        assertThat("Length not changed in deletion",
+                newString.length(),
+                not(defaultValue.length()));
     }
 
 }

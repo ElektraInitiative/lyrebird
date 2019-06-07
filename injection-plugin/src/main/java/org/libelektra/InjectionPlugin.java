@@ -58,7 +58,7 @@ public class InjectionPlugin {
             if (hasStructureMetadata(injectKey)) {
                 keySet = structureError.applyStructureError(keySet, path, StructureError.Metadata.SECTION_REMOVE);
             } else if (hasTypoMetadata(injectKey)) {
-                keySet = typoError.applyTypoError(keySet, path, TypoError.Metadata.TYPO_CHANGE_CHAR);
+                keySet = typoError.applyTypoError(keySet, path, "asdf", TypoError.Metadata.TYPO_CHANGE_CHAR);
             } else if (hasSemanticMetadata(injectKey)) {
                 keySet = semanticError.applySemanticError(keySet, injectKey);
             } else if (hasResourceMetadata(injectKey)) {
