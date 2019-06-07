@@ -15,6 +15,7 @@
         <module>elektra-native</module>
         <module>module-runner</module>
         <module>injection-plugin</module>
+        <module>inject-config-validator</module>
     </modules>
 
     <properties>
