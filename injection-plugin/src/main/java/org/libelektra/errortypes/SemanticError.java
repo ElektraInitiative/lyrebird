@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Objects.nonNull;
@@ -34,6 +35,16 @@ public class SemanticError extends AbstractErrorType {
             currentKey = key.nextMeta();
         }
         return set;
+    }
+
+    @Override
+    public int getInjectionInt() {
+        return TYPE_ID;
+    }
+
+    @Override
+    public List<InjectionMeta> getBelongingMetadatas() {
+        return Arrays.asList(Metadata.values());
     }
 
     private KeySet semanticError(KeySet set, Key key) {

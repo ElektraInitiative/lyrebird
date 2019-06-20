@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Objects.nonNull;
@@ -19,6 +20,16 @@ public class ResourceError extends AbstractErrorType {
     private final static Logger LOG = LoggerFactory.getLogger(ResourceError.class);
 
     public static int TYPE_ID = 3;
+
+    @Override
+    public int getInjectionInt() {
+        return TYPE_ID;
+    }
+
+    @Override
+    public List<InjectionMeta> getBelongingMetadatas() {
+        return Arrays.asList(Metadata.values());
+    }
 
     @Autowired
     public ResourceError(RandomizerService randomizerService) {

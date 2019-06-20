@@ -1,5 +1,6 @@
 package org.libelektra.errortypes;
 
+import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.service.RandomizerService;
 
@@ -12,6 +13,10 @@ import static java.util.Objects.nonNull;
 public abstract class AbstractErrorType {
 
     protected RandomizerService randomizerService;
+
+    public abstract int getInjectionInt();
+
+    public abstract List<InjectionMeta> getBelongingMetadatas();
 
     public AbstractErrorType(RandomizerService randomizerService) {
         this.randomizerService = randomizerService;
@@ -33,7 +38,6 @@ public abstract class AbstractErrorType {
         }
         return key;
     }
-
 
     protected List<String> extractMetaDataArray(Key key, String startsWith) {
         List<String> allMetaArrayValues = new ArrayList<>();

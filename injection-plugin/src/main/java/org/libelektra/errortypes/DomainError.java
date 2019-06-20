@@ -9,9 +9,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.List;
-
-import static java.util.Objects.nonNull;
 
 @Component
 public class DomainError extends AbstractErrorType {
@@ -31,6 +30,16 @@ public class DomainError extends AbstractErrorType {
             return domainError(set, injectKey, injectPath);
         }
         return set;
+    }
+
+    @Override
+    public int getInjectionInt() {
+        return TYPE_ID;
+    }
+
+    @Override
+    public List<InjectionMeta> getBelongingMetadatas() {
+        return Arrays.asList(Metadata.values());
     }
 
     private KeySet domainError(KeySet set, Key injectKey, String injectPath) {

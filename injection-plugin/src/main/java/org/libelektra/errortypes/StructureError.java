@@ -13,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.IntStream;
 
 import static java.util.Objects.nonNull;
@@ -35,8 +37,6 @@ public class StructureError extends AbstractErrorType{
     }
 
     public KeySet applyStructureError(KeySet set, String path, InjectionMeta meta) {
-
-
         if (meta.equals(Metadata.SECTION_REMOVE)) {
             return removeSection(set, path);
         } else if (meta.equals(Metadata.SECTION_REALLOCATE)) {
@@ -45,6 +45,16 @@ public class StructureError extends AbstractErrorType{
             return duplicateSection(set, path);
         }
         return set;
+    }
+
+    @Override
+    public int getInjectionInt() {
+        return TYPE_ID;
+    }
+
+    @Override
+    public List<InjectionMeta> getBelongingMetadatas() {
+        return Arrays.asList(Metadata.values());
     }
 
     private KeySet removeSection(KeySet set, String path) {
