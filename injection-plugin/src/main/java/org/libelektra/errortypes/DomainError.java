@@ -17,7 +17,7 @@ public class DomainError extends AbstractErrorType {
 
     private final static Logger LOG = LoggerFactory.getLogger(DomainError.class);
 
-    public static int TYPE_ID = 5;
+    public int TYPE_ID = 5;
 
     @Autowired
     public DomainError(RandomizerService randomizerService) {
@@ -51,7 +51,7 @@ public class DomainError extends AbstractErrorType {
 
         String message = String.format("Domain Error [%s ===> %s] on %s",
                 value, newValue, injectPath);
-        LOG.debug(message);
+        LOG.info(message);
 
         return set;
     }

@@ -63,7 +63,7 @@ public class ResourceError extends AbstractErrorType {
 
         String message = String.format("Resource Error [%s ===> %s] on %s",
                 value, newValue, injectPath);
-        LOG.debug(message);
+        LOG.info(message);
 
         return set;
     }

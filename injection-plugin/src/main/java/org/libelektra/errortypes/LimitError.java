@@ -61,7 +61,7 @@ public class LimitError extends AbstractErrorType {
 
         String message = String.format("Limit Error [%s ===> %s] on %s",
                 value, newValue, injectPath);
-        LOG.debug(message);
+        LOG.info(message);
 
         return set;
     }

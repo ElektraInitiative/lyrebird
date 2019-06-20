@@ -58,7 +58,7 @@ public class StructureError extends AbstractErrorType{
     private KeySet removeSection(KeySet set, String path) {
         LOG.debug("Applying Structure Error [removeSection] to {}", path);
         removeSectionNoLogging(set, path);
-        LOG.debug("Removing: {} ===> REMOVE", path);
+        LOG.info("Removing: {} ===> REMOVE", path);
         return set;
     }
 
@@ -87,7 +87,7 @@ public class StructureError extends AbstractErrorType{
         KeySet extractedKSwithNewRoot = changePathOfKeySet(extractedKS, toSubstitute, newRoot);
 
         String message = String.format("Reallocate %s ===> %s", path, newRoot);
-        LOG.debug(message);
+        LOG.info(message);
         removeSectionNoLogging(set, path);
         set.append(extractedKSwithNewRoot);
 
@@ -108,7 +108,7 @@ public class StructureError extends AbstractErrorType{
         set.append(extractedKSwithNewRoot);
 
         String message = String.format("Duplicate %s ===> %s", path, newRoot);
-        LOG.debug(message);
+        LOG.info(message);
 
         return set;
     }

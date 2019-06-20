@@ -21,15 +21,15 @@ public class KDBService {
 
     public KDBService() throws KDB.KDBException {
         this.namespace = ROOT;
-        initKDB(ROOT);
+        initKDB();
     }
 
     public KDBService(String namespace) throws KDB.KDBException {
         this.namespace = namespace;
-        initKDB(namespace);
+        initKDB();
     }
 
-    private void initKDB(String namespace) throws KDB.KDBException {
+    public void initKDB() throws KDB.KDBException {
         Key key = Key.create(namespace);
         kdb = KDB.open(key);
         allKeys = KeySet.create();
@@ -45,7 +45,7 @@ public class KDBService {
         return kdb;
     }
 
-    public KeySet getKeySetBelowPath(String path) {
+    public KeySet getKeySetBelowPath(String path) throws KDB.KDBException {
         Key parentKey = Key.create(path);
         return allKeys.dup().cut(parentKey);
     }
@@ -79,7 +79,11 @@ public class KDBService {
 
     public void printBelowPath(String path) {
         LOG.debug("Printing KeySet below {}", path);
-        KeySet toPrint = getKeySetBelowPath(path);
-        KeySet.printKeySet(toPrint);
+        try {
+            KeySet toPrint = getKeySetBelowPath(path);
+            KeySet.printKeySet(toPrint);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

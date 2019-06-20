@@ -36,8 +36,10 @@ public class Main implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        runner.resetConfiguration();
-        runner.injectInConfiguration();
+        for (int i = 0; i < 10; i++) {
+            runner.resetConfiguration();
+            runner.injectInConfiguration();
+        }
 //        runner.close();
     }
 

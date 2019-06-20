@@ -2,9 +2,11 @@ package org.libelektra;
 
 import org.libelektra.errortypes.*;
 import org.libelektra.service.KDBService;
+import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -30,7 +32,9 @@ public class InjectionPlugin {
     private final DomainError domainError;
     private final LimitError limitError;
 
+    private final RandomizerService randomizerService;
     private final KDBService kdbService;
+    private final String configMountPoint;
 
     @Autowired
     public InjectionPlugin(StructureError structureError,
@@ -39,51 +43,42 @@ public class InjectionPlugin {
                            ResourceError resourceError,
                            DomainError domainError,
                            LimitError limitError,
-                           KDBService kdbService) {
+                           RandomizerService randomizerService,
+                           KDBService kdbService,
+                           @Value("${config.mountpoint}") String configMountPoint) {
         this.structureError = structureError;
         this.typoError = typoError;
         this.semanticError = semanticError;
         this.resourceError = resourceError;
         this.domainError = domainError;
         this.limitError = limitError;
-
+        this.randomizerService = randomizerService;
         this.kdbService = kdbService;
+        this.configMountPoint = configMountPoint;
     }
 
     public int kdbSet(KeySet keySet, Key injectKey, String path) {
         keySet.rewind();
 
-        InjectionData injectionData = new InjectionData(keySet, injectKey, null, path,
-                SemanticError.Metadata.SEMANTIC_ERROR);
+        String defaultValue = injectKey.getMeta("default").getString();
+        InjectionData injectionData = new InjectionData(keySet, injectKey, defaultValue, path,
+                null);
+
+        List<AbstractErrorType> allErrors = new ArrayList<>(getAllPossibleInjections(injectKey));
+        AbstractErrorType toInject = allErrors.get(randomizerService.getNextInt(allErrors.size()));
+        List<InjectionMeta> availableMetadatas = toInject.getBelongingMetadatas();
+        InjectionMeta injectionConcrete =
+                availableMetadatas.get(randomizerService.getNextInt(availableMetadatas.size()));
+
+        injectionData.setInjectionType(injectionConcrete);
 
         try {
-            if (hasStructureMetadata(injectKey)) {
-                injectionData.setInjectionType(StructureError.Metadata.SECTION_REMOVE);
-                keySet = structureError.apply(injectionData);
-            } else if (hasTypoMetadata(injectKey)) {
-                String defaultValue = injectKey.getMeta("default").getString();
-                TypoError.Metadata injectionType = TypoError.Metadata.TYPO_CHANGE_CHAR;
-                injectionData.setDefaultValue(defaultValue);
-                injectionData.setInjectionType(injectionType);
-                keySet = typoError.apply(injectionData);
-            } else if (hasSemanticMetadata(injectKey)) {
-                keySet = semanticError.applySemanticError(injectionData);
-            } else if (hasResourceMetadata(injectKey)) {
-                injectionData.setInjectionType(ResourceError.Metadata.RESOURCE_ERROR);
-                keySet = resourceError.apply(injectionData);
-            } else if (hasDomaincMetadata(injectKey)) {
-                injectionData.setInjectionType(DomainError.Metadata.DOMAIN_ERROR);
-                keySet = domainError.apply(injectionData);
-            } else if (hasLimitMetadata(injectKey)) {
-                injectionData.setInjectionType(LimitError.Metadata.LIMIT_ERROR_MIN);
-                keySet = limitError.apply(injectionData);
-            }
-
-            kdbService.set(keySet, ROOT_KEY);
+            keySet = toInject.apply(injectionData);
+            kdbService.set(keySet, configMountPoint);
         } catch (KDB.KDBException e) {
-            e.printStackTrace();
+            LOG.warn("Could not inject: Type {}, Injection: {}", toInject.getClass().getSimpleName(),
+                    injectionConcrete.getMetadata(), e);
         }
-
 
         return 0;
     }
@@ -92,10 +87,10 @@ public class InjectionPlugin {
         return name;
     }
 
-    Collection<InjectionMeta> getAllPossibleInjections(Key injectKey) {
-        Collection<InjectionMeta> injectionMetaCollection = new ArrayList<>();
-        injectionMetaCollection.addAll(Arrays.asList(StructureError.Metadata.values()));
-        injectionMetaCollection.addAll(Arrays.asList(TypoError.Metadata.values()));
+    Collection<AbstractErrorType> getAllPossibleInjections(Key injectKey) {
+        Collection<AbstractErrorType> injectionMetaCollection = new ArrayList<>();
+        injectionMetaCollection.add(structureError);
+        injectionMetaCollection.add(typoError);
         Key types = injectKey.getMeta("types");
         if (types.isNull()) {
             return injectionMetaCollection;
@@ -105,30 +100,30 @@ public class InjectionPlugin {
                 .map(Integer::valueOf)
                 .collect(Collectors.toList());
 
-        if (allTypesAsIntegers.contains(SemanticError.TYPE_ID)) {
+        if (allTypesAsIntegers.contains(semanticError.getInjectionInt())) {
             if (hasSemanticMetadata(injectKey)) {
-                injectionMetaCollection.addAll(Arrays.asList(SemanticError.Metadata.values()));
+                injectionMetaCollection.add(semanticError);
             } else {
                 LOG.warn("No {} metadata found for key {} despite given int", "semantic", injectKey.getName());
             }
         }
-        if (allTypesAsIntegers.contains(ResourceError.TYPE_ID)) {
+        if (allTypesAsIntegers.contains(resourceError.getInjectionInt())) {
             if (hasResourceMetadata(injectKey)) {
-                injectionMetaCollection.addAll(Arrays.asList(ResourceError.Metadata.values()));
+                injectionMetaCollection.add(resourceError);
             } else {
                 LOG.warn("No {} metadata found for key {} despite given int", "resource", injectKey.getName());
             }
         }
-        if (allTypesAsIntegers.contains(DomainError.TYPE_ID)) {
+        if (allTypesAsIntegers.contains(domainError.getInjectionInt())) {
             if (hasDomaincMetadata(injectKey)) {
-                injectionMetaCollection.addAll(Arrays.asList(DomainError.Metadata.values()));
+                injectionMetaCollection.add(domainError);
             } else {
                 LOG.warn("No {} metadata found for key {} despite given int", "domain", injectKey.getName());
             }
         }
-        if (allTypesAsIntegers.contains(LimitError.TYPE_ID)) {
+        if (allTypesAsIntegers.contains(limitError.getInjectionInt())) {
             if (hasLimitMetadata(injectKey)) {
-                injectionMetaCollection.addAll(Arrays.asList(LimitError.Metadata.values()));
+                injectionMetaCollection.add(limitError);
             } else {
                 LOG.warn("No {} metadata found for key {} despite given int", "limit", injectKey.getName());
             }

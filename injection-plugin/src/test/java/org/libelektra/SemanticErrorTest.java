@@ -46,7 +46,7 @@ public class SemanticErrorTest extends AbstractErrorTest {
         injectKey.setMeta(SEMANTIC_ERROR.getMetadata() + "/#2", alternativeOptions.get(2));
 
         KeySet.printKeySet(loadedKeySet);
-        KeySet returnedSet = semanticError.applySemanticError(new InjectionData(loadedKeySet, injectKey,
+        KeySet returnedSet = semanticError.apply(new InjectionData(loadedKeySet, injectKey,
                 null, APPLY_NAMESPACE, SEMANTIC_ERROR));
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);

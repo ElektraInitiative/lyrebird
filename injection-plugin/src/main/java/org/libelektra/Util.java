@@ -29,9 +29,15 @@ public class Util {
         }
 
         // read any errors from the attempted command
+        StringBuilder errors = new StringBuilder();
+        boolean err = false;
         while ((s = stdError.readLine()) != null)
         {
-            LOG.debug("stderr: {}" ,s);
+            errors.append(String.format("stderr: %s\n", s));
+            err = true;
+        }
+        if (err) {
+            LOG.error("Failed command: '{}'\n{}", command, errors.toString());
         }
     }
 

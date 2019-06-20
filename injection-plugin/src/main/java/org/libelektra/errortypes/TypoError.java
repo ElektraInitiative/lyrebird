@@ -85,7 +85,7 @@ public class TypoError extends AbstractErrorType {
 
         String message = String.format("Changing [%s ===> %s] on %s",
                 value, newValue, keyToChange.getName());
-        LOG.debug("{}", message);
+        LOG.info("{}", message);
         set.append(keyToChange);
         return set;
     }
@@ -102,7 +102,7 @@ public class TypoError extends AbstractErrorType {
 
         String message = String.format("Inserted [%s ===> %s] on %s",
                 value, newString, keyToChange.getName());
-        LOG.debug(message);
+        LOG.info(message);
 
         keyToChange.setString(newString);
         set.append(keyToChange);
@@ -120,7 +120,7 @@ public class TypoError extends AbstractErrorType {
 
         String message = String.format("Deletion [%s ===> %s] on %s",
                 value, newString, keyToChange.getName());
-        LOG.debug(message);
+        LOG.info(message);
 
         keyToChange.setString(newString);
         set.append(keyToChange);
@@ -141,7 +141,7 @@ public class TypoError extends AbstractErrorType {
         String newString = sb.toString();
         String message = String.format("Changing Char [%s ===> %s] on %s",
                 value, newString, keyToChange.getName());
-        LOG.debug(message);
+        LOG.info(message);
 
         keyToChange.setString(newString);
         set.append(keyToChange);
@@ -168,7 +168,7 @@ public class TypoError extends AbstractErrorType {
         String newString = sb.toString();
         String message = String.format("Inserting space [%s ===> '%s'] on %s",
                 value, newString, keyToChange.getName());
-        LOG.debug(message);
+        LOG.info(message);
 
         keyToChange.setString(newString);
         set.append(keyToChange);
@@ -210,7 +210,7 @@ public class TypoError extends AbstractErrorType {
 
         String message = String.format("Toggle Case [%s ===> %s] on %s",
                 value, newString, keyToChange.getName());
-        LOG.debug("{}", message);
+        LOG.info("{}", message);
         set.append(keyToChange);
         return set;
     }

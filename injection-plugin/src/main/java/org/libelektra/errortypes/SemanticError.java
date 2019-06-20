@@ -23,7 +23,7 @@ public class SemanticError extends AbstractErrorType {
         super(randomizerService);
     }
 
-    public KeySet applySemanticError(InjectionData injectionData) {
+    public KeySet apply(InjectionData injectionData) {
         injectionData.getInjectKey().rewindMeta();
         if (injectionData.getInjectionType().equals(Metadata.SEMANTIC_ERROR)) {
             return semanticError(injectionData.getSet(), injectionData.getInjectKey(), injectionData.getInjectPath());

@@ -48,7 +48,7 @@ public class StructureErrorTest extends AbstractErrorTest {
         KeySet.printKeySet(loadedKeySet);
         assertThat(loadedKeySet.lookup(APPLY_NAMESPACE+"/a/b1/c1").getName(), notNullValue());
         kdbService.set(loadedKeySet, APPLY_NAMESPACE);
-        KeySet returnedKeySet = structureError.apply(new InjectionData(loadedKeySet, APPLY_NAMESPACE +
+        KeySet returnedKeySet = structureError.apply(new InjectionData(loadedKeySet, null, null,APPLY_NAMESPACE +
                 "/a/b1", StructureError.Metadata.SECTION_REMOVE));
         kdbService.set(returnedKeySet, APPLY_NAMESPACE);
         assertThat(returnedKeySet.lookup(APPLY_NAMESPACE+"/a/b1/c1").getName(), nullValue());
@@ -70,7 +70,7 @@ public class StructureErrorTest extends AbstractErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(loadedKeySet, APPLY_NAMESPACE);
-        KeySet returnedKeySet = structureError.apply(new InjectionData(loadedKeySet, APPLY_NAMESPACE +
+        KeySet returnedKeySet = structureError.apply(new InjectionData(loadedKeySet, null, null,APPLY_NAMESPACE +
                 "/a/b1", SECTION_REALLOCATE));
         kdbService.set(returnedKeySet, APPLY_NAMESPACE);
         KeySet.printKeySet(loadedKeySet);
@@ -100,7 +100,7 @@ public class StructureErrorTest extends AbstractErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(loadedKeySet, APPLY_NAMESPACE);
-        KeySet returnedKeySet = structureError.apply(new InjectionData(loadedKeySet, APPLY_NAMESPACE + "/a/b1", SECTION_DUPLICATE));
+        KeySet returnedKeySet = structureError.apply(new InjectionData(loadedKeySet, null, null,APPLY_NAMESPACE + "/a/b1", SECTION_DUPLICATE));
         KeySet.printKeySet(loadedKeySet);
 
         //This outcome is specific to the set SEED so if you changed the random number it will most likely break
