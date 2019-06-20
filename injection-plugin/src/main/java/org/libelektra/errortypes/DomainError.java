@@ -24,28 +24,18 @@ public class DomainError extends AbstractErrorType {
         super(randomizerService);
     }
 
-    public KeySet applyDomainError(KeySet set, Key injectKey, String injectPath, InjectionMeta injectionType) {
-        injectKey.rewindMeta();
-        if (injectionType.equals(Metadata.DOMAIN_ERROR)) {
-            return domainError(set, injectKey, injectPath);
+    public KeySet apply(InjectionData injectionData) {
+        injectionData.getInjectKey().rewindMeta();
+        if (injectionData.getInjectionType().equals(Metadata.DOMAIN_ERROR)) {
+            return domainError(injectionData.getSet(), injectionData.getInjectKey(), injectionData.getInjectPath());
         }
-        return set;
-    }
-
-    @Override
-    public int getInjectionInt() {
-        return TYPE_ID;
-    }
-
-    @Override
-    public List<InjectionMeta> getBelongingMetadatas() {
-        return Arrays.asList(Metadata.values());
+        return injectionData.getSet();
     }
 
     private KeySet domainError(KeySet set, Key injectKey, String injectPath) {
         LOG.debug("Applying domain error to {}", injectPath);
         String metadata = Metadata.DOMAIN_ERROR.getMetadata();
-        String value = injectKey.getString();
+        String value = set.lookup(injectPath).getString();
         List<String> allMetaArrayValues = extractMetaDataArray(injectKey, metadata);
 
         if (allMetaArrayValues.size() == 0) {
@@ -64,6 +54,16 @@ public class DomainError extends AbstractErrorType {
         LOG.debug(message);
 
         return set;
+    }
+
+    @Override
+    public int getInjectionInt() {
+        return TYPE_ID;
+    }
+
+    @Override
+    public List<InjectionMeta> getBelongingMetadatas() {
+        return Arrays.asList(Metadata.values());
     }
 
     public static enum Metadata implements InjectionMeta {
@@ -87,6 +87,6 @@ public class DomainError extends AbstractErrorType {
             }
             return false;
         }
-    }
 
+    }
 }

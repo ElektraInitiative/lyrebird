@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.util.Objects.nonNull;
-
 @Component
 public class ResourceError extends AbstractErrorType {
 
@@ -36,25 +34,21 @@ public class ResourceError extends AbstractErrorType {
         super(randomizerService);
     }
 
-    public KeySet applyResourceError(KeySet set, Key key) {
-        key.rewindMeta();
-        Key currentKey = key.currentMeta();
-        while (nonNull(currentKey.getName())) {
-            if (currentKey.getName().startsWith(Metadata.RESOURCE_ERROR.getMetadata())) {
-                return resourceError(set, key);
-            }
-            currentKey = key.nextMeta();
+    public KeySet apply(InjectionData injectionData) {
+        injectionData.getInjectKey().rewindMeta();
+
+        if (injectionData.getInjectionType().equals(Metadata.RESOURCE_ERROR)) {
+            return resourceError(injectionData.getSet(), injectionData.getInjectKey(), injectionData.getInjectPath());
         }
-        return set;
+
+        return injectionData.getSet();
     }
 
-    private KeySet resourceError(KeySet set, Key key) {
-        LOG.debug("Applying resource error to {}", key.getName());
+    private KeySet resourceError(KeySet set, Key injectKey, String injectPath) {
+        LOG.debug("Applying resource error to {}", injectKey.getName());
         String metadata = Metadata.RESOURCE_ERROR.getMetadata();
-        String value = key.getString();
-        List<String> allMetaArrayValues = extractMetaDataArray(key, metadata);
-        key = removeAffectingMetaArray(key, metadata);
-        set.append(key);
+        String value = set.lookup(injectPath).getString();
+        List<String> allMetaArrayValues = extractMetaDataArray(injectKey, metadata);
 
         if (allMetaArrayValues.size() == 0) {
             LOG.warn("Cannot apply resource error without provided alternatives");
@@ -63,11 +57,12 @@ public class ResourceError extends AbstractErrorType {
 
         int randomPick = randomizerService.getNextInt(allMetaArrayValues.size());
         String newValue = allMetaArrayValues.get(randomPick);
-        key.setString(newValue);
-        set.append(key);
+        Key newKey = Key.create(injectPath);
+        newKey.setString(newValue);
+        set.append(newKey);
 
         String message = String.format("Resource Error [%s ===> %s] on %s",
-                value, newValue, key.getName());
+                value, newValue, injectPath);
         LOG.debug(message);
 
         return set;

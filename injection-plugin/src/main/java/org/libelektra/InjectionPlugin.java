@@ -53,20 +53,30 @@ public class InjectionPlugin {
     public int kdbSet(KeySet keySet, Key injectKey, String path) {
         keySet.rewind();
 
+        InjectionData injectionData = new InjectionData(keySet, injectKey, null, path,
+                SemanticError.Metadata.SEMANTIC_ERROR);
 
         try {
             if (hasStructureMetadata(injectKey)) {
-                keySet = structureError.applyStructureError(keySet, path, StructureError.Metadata.SECTION_REMOVE);
+                injectionData.setInjectionType(StructureError.Metadata.SECTION_REMOVE);
+                keySet = structureError.apply(injectionData);
             } else if (hasTypoMetadata(injectKey)) {
-                keySet = typoError.applyTypoError(keySet, path, "asdf", TypoError.Metadata.TYPO_CHANGE_CHAR);
+                String defaultValue = injectKey.getMeta("default").getString();
+                TypoError.Metadata injectionType = TypoError.Metadata.TYPO_CHANGE_CHAR;
+                injectionData.setDefaultValue(defaultValue);
+                injectionData.setInjectionType(injectionType);
+                keySet = typoError.apply(injectionData);
             } else if (hasSemanticMetadata(injectKey)) {
-                keySet = semanticError.applySemanticError(keySet, injectKey);
+                keySet = semanticError.applySemanticError(injectionData);
             } else if (hasResourceMetadata(injectKey)) {
-                keySet = resourceError.applyResourceError(keySet, injectKey);
+                injectionData.setInjectionType(ResourceError.Metadata.RESOURCE_ERROR);
+                keySet = resourceError.apply(injectionData);
             } else if (hasDomaincMetadata(injectKey)) {
-                keySet = domainError.applyDomainError(keySet, injectKey, path, DomainError.Metadata.DOMAIN_ERROR);
+                injectionData.setInjectionType(DomainError.Metadata.DOMAIN_ERROR);
+                keySet = domainError.apply(injectionData);
             } else if (hasLimitMetadata(injectKey)) {
-                keySet = limitError.applyLimitError(keySet, injectKey);
+                injectionData.setInjectionType(LimitError.Metadata.LIMIT_ERROR_MIN);
+                keySet = limitError.apply(injectionData);
             }
 
             kdbService.set(keySet, ROOT_KEY);

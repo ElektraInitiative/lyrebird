@@ -1,10 +1,10 @@
 package org.libelektra;
 
+import org.libelektra.errortypes.InjectionData;
 import org.libelektra.errortypes.ResourceError;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.libelektra.service.KDBService;
+import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,68 +14,46 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
-import static org.libelektra.InjectionPlugin.ROOT_KEY;
 import static org.libelektra.errortypes.ResourceError.Metadata.RESOURCE_ERROR;
 
-public class ResourceErrorTest {
+public class ResourceErrorTest extends AbstractErrorTest {
 
     private final static Logger LOG = LoggerFactory.getLogger(ResourceErrorTest.class);
 
-    private InjectionPlugin injectionPlugin;
-    private KDB kdb;
+    private ResourceError resourceError;
     private KeySet loadedKeySet;
-    private Key testKey;
+    private Key injectKey;
 
     List<String> alternativeOptions;
 
-//    @Before
-//    public void setUp() throws KDB.KDBException {
-//        KDBService kdbService = new KDBService();
-//        injectionPlugin = new InjectionPlugin(structureError, typoError, semanticError, resourceError, domainError, limitError, kdbService);
-//        kdb = kdbService.getInstance();
-//        loadedKeySet = KeySet.create();
-//        kdb.get(loadedKeySet, ROOT_KEY);
-//        testKey = Key.create(ROOT_KEY + "/some/value", "/my/valid/path");
-//        loadedKeySet.append(testKey);
-//        alternativeOptions = new ArrayList<>();
-//        alternativeOptions.add("/tmp/myfile.txt");
-//        alternativeOptions.add("/root/secure.txt");
-//        alternativeOptions.add("/does/not/exist");
-//    }
-//
-//    @Test
-//    public void resourceError_shouldWork() throws Exception {
-//        testKey.setMeta(RESOURCE_ERROR.getMetadata() + "/#0", alternativeOptions.get(0));
-//        testKey.setMeta(RESOURCE_ERROR.getMetadata() + "/#1", alternativeOptions.get(1));
-//        testKey.setMeta(RESOURCE_ERROR.getMetadata() + "/#2", alternativeOptions.get(2));
-//        testKey.setMeta(InjectionPlugin.SEED_META, "411");
-//
-//        KeySet.printKeySet(loadedKeySet);
-//        kdb.set(loadedKeySet, ROOT_KEY);
-//        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY, "user/tests/injectplugin");
-//        KeySet.printKeySet(loadedKeySet);
-//
-//        String newString = loadedKeySet.lookup(testKey.getName()).getString();
-//        assertThat("None of the provided values were picked in resource error!",
-//                alternativeOptions.stream().anyMatch(newString::equals),
-//                is(true));
-//        assertThat("Metadata (#0) was not removed",
-//                loadedKeySet.lookup(testKey.getName())
-//                        .getMeta(ResourceError.Metadata.RESOURCE_ERROR.getMetadata() + "/#0").getName(),
-//                nullValue());
-//        assertThat("Metadata (#1) was not removed",
-//                loadedKeySet.lookup(testKey.getName())
-//                        .getMeta(ResourceError.Metadata.RESOURCE_ERROR.getMetadata() + "/#1").getName(),
-//                nullValue());
-//        assertThat("Metadata (#2) was not removed",
-//                loadedKeySet.lookup(testKey.getName())
-//                        .getMeta(ResourceError.Metadata.RESOURCE_ERROR.getMetadata() + "/#2").getName(),
-//                nullValue());
-//    }
-//
-//    @After
-//    public void tearDown() throws KDB.KDBException {
-//        Util.cleanUp(loadedKeySet, kdb);
-//    }
+    @Before
+    public void setUp() throws KDB.KDBException {
+        resourceError = new ResourceError(new RandomizerService(100));
+        loadedKeySet = KeySet.create();
+        kdbService.get(loadedKeySet, Key.create(TEST_NAMESPACE));
+        injectKey = Key.create(INJECT_NAMESPACE + "/some/value", "myResource");
+        loadedKeySet.append(injectKey);
+        alternativeOptions = new ArrayList<>();
+        alternativeOptions.add("/tmp/myfile.txt");
+        alternativeOptions.add("/root/secure.txt");
+        alternativeOptions.add("/does/not/exist");
+    }
+
+    @Test
+    public void resourceError_shouldWork() throws Exception {
+        injectKey.setMeta(RESOURCE_ERROR.getMetadata() + "/#0", alternativeOptions.get(0));
+        injectKey.setMeta(RESOURCE_ERROR.getMetadata() + "/#1", alternativeOptions.get(1));
+        injectKey.setMeta(RESOURCE_ERROR.getMetadata() + "/#2", alternativeOptions.get(2));
+
+        KeySet.printKeySet(loadedKeySet);
+        KeySet returnedSet = resourceError.apply(new InjectionData(loadedKeySet, injectKey,
+                null, APPLY_NAMESPACE, RESOURCE_ERROR));
+        KeySet.printKeySet(returnedSet);
+
+        String newString = returnedSet.lookup(APPLY_NAMESPACE ).getString();
+        assertThat("None of the provided values were picked in resource error!",
+                alternativeOptions.stream().anyMatch(newString::equals),
+                is(true));
+    }
 
 }

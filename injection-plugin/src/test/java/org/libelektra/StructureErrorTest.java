@@ -2,6 +2,7 @@ package org.libelektra;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.libelektra.errortypes.InjectionData;
 import org.libelektra.errortypes.StructureError;
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
@@ -9,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
-import static org.libelektra.InjectionPlugin.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.libelektra.errortypes.StructureError.Metadata.SECTION_DUPLICATE;
 import static org.libelektra.errortypes.StructureError.Metadata.SECTION_REALLOCATE;
@@ -48,7 +48,8 @@ public class StructureErrorTest extends AbstractErrorTest {
         KeySet.printKeySet(loadedKeySet);
         assertThat(loadedKeySet.lookup(APPLY_NAMESPACE+"/a/b1/c1").getName(), notNullValue());
         kdbService.set(loadedKeySet, APPLY_NAMESPACE);
-        KeySet returnedKeySet = structureError.applyStructureError(loadedKeySet, APPLY_NAMESPACE + "/a/b1", StructureError.Metadata.SECTION_REMOVE);
+        KeySet returnedKeySet = structureError.apply(new InjectionData(loadedKeySet, APPLY_NAMESPACE +
+                "/a/b1", StructureError.Metadata.SECTION_REMOVE));
         kdbService.set(returnedKeySet, APPLY_NAMESPACE);
         assertThat(returnedKeySet.lookup(APPLY_NAMESPACE+"/a/b1/c1").getName(), nullValue());
         KeySet.printKeySet(loadedKeySet);
@@ -69,7 +70,8 @@ public class StructureErrorTest extends AbstractErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(loadedKeySet, APPLY_NAMESPACE);
-        KeySet returnedKeySet = structureError.applyStructureError(loadedKeySet, APPLY_NAMESPACE + "/a/b1", SECTION_REALLOCATE);
+        KeySet returnedKeySet = structureError.apply(new InjectionData(loadedKeySet, APPLY_NAMESPACE +
+                "/a/b1", SECTION_REALLOCATE));
         kdbService.set(returnedKeySet, APPLY_NAMESPACE);
         KeySet.printKeySet(loadedKeySet);
 
@@ -98,7 +100,7 @@ public class StructureErrorTest extends AbstractErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(loadedKeySet, APPLY_NAMESPACE);
-        KeySet returnedKeySet = structureError.applyStructureError(loadedKeySet, APPLY_NAMESPACE + "/a/b1", SECTION_DUPLICATE);
+        KeySet returnedKeySet = structureError.apply(new InjectionData(loadedKeySet, APPLY_NAMESPACE + "/a/b1", SECTION_DUPLICATE));
         KeySet.printKeySet(loadedKeySet);
 
         //This outcome is specific to the set SEED so if you changed the random number it will most likely break

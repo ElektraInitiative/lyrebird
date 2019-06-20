@@ -12,8 +12,6 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.util.Objects.nonNull;
-
 @Component
 public class SemanticError extends AbstractErrorType {
 
@@ -25,15 +23,34 @@ public class SemanticError extends AbstractErrorType {
         super(randomizerService);
     }
 
-    public KeySet applySemanticError(KeySet set, Key key) {
-        key.rewindMeta();
-        Key currentKey = key.currentMeta();
-        while (nonNull(currentKey.getName())) {
-            if (currentKey.getName().startsWith(Metadata.SEMANTIC_ERROR.getMetadata())) {
-                return semanticError(set, key);
-            }
-            currentKey = key.nextMeta();
+    public KeySet applySemanticError(InjectionData injectionData) {
+        injectionData.getInjectKey().rewindMeta();
+        if (injectionData.getInjectionType().equals(Metadata.SEMANTIC_ERROR)) {
+            return semanticError(injectionData.getSet(), injectionData.getInjectKey(), injectionData.getInjectPath());
         }
+        return injectionData.getSet();
+    }
+
+    private KeySet semanticError(KeySet set, Key key, String injectPath) {
+        LOG.debug("Applying semantic error to {}", key.getName());
+        String value = set.lookup(injectPath).getString();
+        List<String> allMetaArrayValues = extractMetaDataArray(key, Metadata.SEMANTIC_ERROR.getMetadata());
+
+        if (allMetaArrayValues.size() == 0) {
+            LOG.warn("Cannot apply semantic error without provided alternatives");
+            return set;
+        }
+
+        int randomPick = randomizerService.getNextInt(allMetaArrayValues.size());
+        String newValue = allMetaArrayValues.get(randomPick);
+        Key newKey = Key.create(injectPath);
+        newKey.setString(newValue);
+        set.append(newKey);
+
+        String message = String.format("Semantic Error [%s ===> %s] on %s",
+                value, newValue, injectPath);
+        LOG.debug(message);
+
         return set;
     }
 
@@ -45,30 +62,6 @@ public class SemanticError extends AbstractErrorType {
     @Override
     public List<InjectionMeta> getBelongingMetadatas() {
         return Arrays.asList(Metadata.values());
-    }
-
-    private KeySet semanticError(KeySet set, Key key) {
-        LOG.debug("Applying semantic error to {}", key.getName());
-        String value = key.getString();
-        List<String> allMetaArrayValues = extractMetaDataArray(key, Metadata.SEMANTIC_ERROR.getMetadata());
-        key = removeAffectingMetaArray(key, Metadata.SEMANTIC_ERROR.getMetadata());
-        set.append(key);
-
-        if (allMetaArrayValues.size() == 0) {
-            LOG.warn("Cannot apply semantic error without provided alternatives");
-            return set;
-        }
-
-        int randomPick = randomizerService.getNextInt(allMetaArrayValues.size());
-        String newValue = allMetaArrayValues.get(randomPick);
-        key.setString(newValue);
-        set.append(key);
-
-        String message = String.format("Semantic Error [%s ===> %s] on %s",
-                value, newValue, key.getName());
-        LOG.debug(message);
-
-        return set;
     }
 
     public static enum Metadata implements InjectionMeta {

@@ -29,23 +29,23 @@ public class TypoError extends AbstractErrorType {
         this.kdbService = kdbService;
     }
 
-    public KeySet applyTypoError(KeySet set, String injectPath, String defaultValue, InjectionMeta injectionType) throws KDB.KDBException {
+    public KeySet apply(InjectionData injectionData) throws KDB.KDBException {
         
-        if (injectionType.equals(Metadata.TYPO_TRANSPOSITION)) {
-            return transposition(set, injectPath, defaultValue);
-        } else if (injectionType.equals(Metadata.TYPO_CHANGE_CHAR)) {
-            return changeChar(set, injectPath, defaultValue);
-        } else if (injectionType.equals(Metadata.TYPO_DELETION)) {
-            return deletion(set, injectPath, defaultValue);
-        } else if (injectionType.equals(Metadata.TYPO_INSERTION)) {
-            return insertion(set, injectPath, defaultValue);
-        } else if (injectionType.equals(Metadata.TYPO_SPACE)) {
-            return space(set, injectPath, defaultValue);
-        } else if (injectionType.equals(Metadata.TYPO_TOGGLE)) {
-            return caseToggle(set, injectPath, defaultValue);
+        if (injectionData.getInjectionType().equals(Metadata.TYPO_TRANSPOSITION)) {
+            return transposition(injectionData.getSet(), injectionData.getInjectPath(), injectionData.getDefaultValue());
+        } else if (injectionData.getInjectionType().equals(Metadata.TYPO_CHANGE_CHAR)) {
+            return changeChar(injectionData.getSet(), injectionData.getInjectPath(), injectionData.getDefaultValue());
+        } else if (injectionData.getInjectionType().equals(Metadata.TYPO_DELETION)) {
+            return deletion(injectionData.getSet(), injectionData.getInjectPath(), injectionData.getDefaultValue());
+        } else if (injectionData.getInjectionType().equals(Metadata.TYPO_INSERTION)) {
+            return insertion(injectionData.getSet(), injectionData.getInjectPath(), injectionData.getDefaultValue());
+        } else if (injectionData.getInjectionType().equals(Metadata.TYPO_SPACE)) {
+            return space(injectionData.getSet(), injectionData.getInjectPath(), injectionData.getDefaultValue());
+        } else if (injectionData.getInjectionType().equals(Metadata.TYPO_TOGGLE)) {
+            return caseToggle(injectionData.getSet(), injectionData.getInjectPath(), injectionData.getDefaultValue());
         }
         
-        return set;
+        return injectionData.getSet();
     }
 
     @Override

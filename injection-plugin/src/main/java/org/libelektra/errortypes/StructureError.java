@@ -4,8 +4,6 @@ import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 
-import static org.libelektra.InjectionPlugin.ROOT_KEY;
-
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,15 +34,15 @@ public class StructureError extends AbstractErrorType{
         this.parentPath = parentPath;
     }
 
-    public KeySet applyStructureError(KeySet set, String path, InjectionMeta meta) {
-        if (meta.equals(Metadata.SECTION_REMOVE)) {
-            return removeSection(set, path);
-        } else if (meta.equals(Metadata.SECTION_REALLOCATE)) {
-            return reallocateSection(set, path);
-        } else if (meta.equals(Metadata.SECTION_DUPLICATE)) {
-            return duplicateSection(set, path);
+    public KeySet apply(InjectionData injectionData) {
+        if (injectionData.getInjectionType().equals(Metadata.SECTION_REMOVE)) {
+            return removeSection(injectionData.getSet(), injectionData.getInjectPath());
+        } else if (injectionData.getInjectionType().equals(Metadata.SECTION_REALLOCATE)) {
+            return reallocateSection(injectionData.getSet(), injectionData.getInjectPath());
+        } else if (injectionData.getInjectionType().equals(Metadata.SECTION_DUPLICATE)) {
+            return duplicateSection(injectionData.getSet(), injectionData.getInjectPath());
         }
-        return set;
+        return injectionData.getSet();
     }
 
     @Override

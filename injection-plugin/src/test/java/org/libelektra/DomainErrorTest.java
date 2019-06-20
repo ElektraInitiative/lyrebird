@@ -3,6 +3,7 @@ package org.libelektra;
 import org.junit.Before;
 import org.junit.Test;
 import org.libelektra.errortypes.DomainError;
+import org.libelektra.errortypes.InjectionData;
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +45,8 @@ public class DomainErrorTest extends AbstractErrorTest {
         injectKey.setMeta(DOMAIN_ERROR.getMetadata() + "/#2", alternativeOptions.get(2));
 
         KeySet.printKeySet(loadedKeySet);
-        KeySet returnedSet = domainError.applyDomainError(loadedKeySet, injectKey, APPLY_NAMESPACE + "/domain", DOMAIN_ERROR);
+        KeySet returnedSet = domainError.apply(new InjectionData(loadedKeySet, injectKey,
+                null, APPLY_NAMESPACE + "/domain", DOMAIN_ERROR));
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
 

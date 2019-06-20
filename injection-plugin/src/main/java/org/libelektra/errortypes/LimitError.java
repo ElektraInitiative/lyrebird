@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
 
 @Component
 public class LimitError extends AbstractErrorType {
@@ -27,16 +26,43 @@ public class LimitError extends AbstractErrorType {
         super(randomizerService);
     }
 
-    public KeySet applyLimitError(KeySet set, Key key) {
-        key.rewindMeta();
-        Key currentKey = key.currentMeta();
-        while (nonNull(currentKey.getName())) {
-            if (currentKey.getName().startsWith(Metadata.LIMIT_ERROR_MAX.getMetadata()) ||
-                    currentKey.getName().startsWith(Metadata.LIMIT_ERROR_MIN.getMetadata())) {
-                return applyError(set, key);
-            }
-            currentKey = key.nextMeta();
+    public KeySet apply(InjectionData injectionData) {
+        injectionData.getInjectKey().rewindMeta();
+        if (injectionData.getInjectionType().equals(LimitError.Metadata.LIMIT_ERROR_MIN) ||
+                injectionData.getInjectionType().equals(LimitError.Metadata.LIMIT_ERROR_MAX)) {
+            return applyError(injectionData.getSet(), injectionData.getInjectKey(), injectionData.getInjectPath());
         }
+        return injectionData.getSet();
+    }
+
+    private KeySet applyError(KeySet set, Key injectKey, String injectPath) {
+        LOG.debug("Applying limit error to {}", injectKey.getName());
+        String value = set.lookup(injectPath).getString();
+
+        String min = injectKey.getMeta(Metadata.LIMIT_ERROR_MIN.getMetadata()).getString();
+        String max = injectKey.getMeta(Metadata.LIMIT_ERROR_MAX.getMetadata()).getString();
+
+        if (isNull(min) && isNull(max)) {
+            LOG.warn("Min or max value was not supplied!");
+            return set;
+        }
+
+        int random = randomizerService.getNextInt(2);
+        String newValue;
+        if (isNull(max) || random == 0) {
+            newValue = min;
+        } else {
+            newValue = max;
+        }
+
+        Key newKey = Key.create(injectPath);
+        newKey.setString(newValue);
+        set.append(newKey);
+
+        String message = String.format("Limit Error [%s ===> %s] on %s",
+                value, newValue, injectPath);
+        LOG.debug(message);
+
         return set;
     }
 
@@ -48,40 +74,6 @@ public class LimitError extends AbstractErrorType {
     @Override
     public List<InjectionMeta> getBelongingMetadatas() {
         return Arrays.asList(Metadata.values());
-    }
-
-    private KeySet applyError(KeySet set, Key key) {
-        LOG.debug("Applying limit error to {}", key.getName());
-        String value = key.getString();
-
-        String min = key.getMeta(Metadata.LIMIT_ERROR_MIN.getMetadata()).getString();
-        String max = key.getMeta(Metadata.LIMIT_ERROR_MAX.getMetadata()).getString();
-
-        if (isNull(min) && isNull(max)) {
-            LOG.warn("Min or max value was not supplied!");
-            return set;
-        }
-
-        key = removeAffectingMeta(key, Metadata.LIMIT_ERROR_MIN.getMetadata(), Metadata.LIMIT_ERROR_MAX.getMetadata());
-        set.append(key);
-
-        int random = randomizerService.getNextInt(2);
-        String newValue;
-        if (isNull(max) || random == 0) {
-            newValue = min;
-        } else {
-            newValue = max;
-        }
-
-        key.setString(newValue);
-        set.append(key);
-
-
-        String message = String.format("Limit Error [%s ===> %s] on %s",
-                value, newValue, key.getName());
-        LOG.debug(message);
-
-        return set;
     }
 
     public static enum Metadata implements InjectionMeta {

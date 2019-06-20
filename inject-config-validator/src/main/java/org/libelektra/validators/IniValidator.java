@@ -37,13 +37,22 @@ public class IniValidator {
     public void doTheThing() throws IOException {
         purgeNewlines("LCDd-inject.ini", "sanitized.ini");
         checkAllTypesSet("sanitized.ini");
+        checkAllDefaults("sanitized.ini");
+    }
+
+    public void checkAllDefaults(String inputFile) throws IOException {
+        Wini ini = getIniFile(inputFile);
+        for (Map.Entry<String, Profile.Section> entry : ini.entrySet()) {
+            boolean gotCorrectMeta = entry.getValue().keySet().stream()
+                    .anyMatch(sectionEntry -> sectionEntry.startsWith("default"));
+            if (!gotCorrectMeta) {
+                LOG.error("Section {} does not contain metadata `default` for typo errors", entry.getKey());
+            }
+        }
     }
 
     public void checkAllTypesSet(String inputFile) throws IOException {
-        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-        File errorConfigFile = new File(classLoader.getResource(inputFile).getFile());
-
-        Wini ini = new Wini(errorConfigFile);
+        Wini ini = getIniFile(inputFile);
         for (Map.Entry<String, Profile.Section> entry : ini.entrySet()) {
             String typesInConfig = ini.get(entry.getKey(), "types");
             if (typesInConfig == null) {
@@ -69,8 +78,14 @@ public class IniValidator {
         }
     }
 
+    private Wini getIniFile(String inputFile) throws IOException {
+        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+        File errorConfigFile = new File(classLoader.getResource(inputFile).getFile());
+
+        return new Wini(errorConfigFile);
+    }
+
     public void purgeNewlines(String inputFile, String outputFile) throws IOException {
-//        "/home/wespe/extern/repository/lyrebird/inject-config-validator/src/main/resources/sanitized.ini"
         ClassLoader classLoader = IniValidator.class.getClassLoader();
         String path = classLoader.getResource("").getPath();
         BufferedWriter writer = new BufferedWriter(new FileWriter(String.format("%s/%s", path, outputFile)));

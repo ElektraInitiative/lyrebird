@@ -2,6 +2,7 @@ package org.libelektra;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.libelektra.errortypes.InjectionData;
 import org.libelektra.errortypes.TypoError;
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
@@ -35,8 +36,9 @@ public class TypoErrorTest extends AbstractErrorTest {
     public void transposition_shouldWork() throws Exception {
         KeySet.printKeySet(loadedKeySet);
         String startString = loadedKeySet.lookup(APPLY_NAMESPACE + "/some/value").getString();
-        KeySet returnedSet = typoError.applyTypoError(loadedKeySet, APPLY_NAMESPACE + "/some/value",
-                "abcdef", TypoError.Metadata.TYPO_TRANSPOSITION);
+        KeySet returnedSet = typoError.apply(
+                new InjectionData(loadedKeySet, "abcdef", APPLY_NAMESPACE + "/some/value",
+                        TypoError.Metadata.TYPO_TRANSPOSITION));
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
@@ -54,8 +56,8 @@ public class TypoErrorTest extends AbstractErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         String startString = loadedKeySet.lookup(APPLY_NAMESPACE + "/some/value").getString();
-        KeySet returnedSet = typoError.applyTypoError(loadedKeySet, APPLY_NAMESPACE + "/some/value",
-                "abcdef", TypoError.Metadata.TYPO_INSERTION);
+        KeySet returnedSet = typoError.apply(
+                new InjectionData(loadedKeySet, "abcdef", APPLY_NAMESPACE + "/some/value", TypoError.Metadata.TYPO_INSERTION));
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
@@ -73,8 +75,8 @@ public class TypoErrorTest extends AbstractErrorTest {
 
         KeySet.printKeySet(loadedKeySet);
         String startString = loadedKeySet.lookup(APPLY_NAMESPACE + "/some/value").getString();
-        KeySet returnedSet = typoError.applyTypoError(loadedKeySet, APPLY_NAMESPACE + "/some/value",
-                "abcdef", TypoError.Metadata.TYPO_DELETION);
+        KeySet returnedSet = typoError.apply(
+                new InjectionData(loadedKeySet, "abcdef", APPLY_NAMESPACE + "/some/value", TypoError.Metadata.TYPO_DELETION));
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
@@ -90,8 +92,8 @@ public class TypoErrorTest extends AbstractErrorTest {
     public void changeChar_shouldWork() throws Exception {
         KeySet.printKeySet(loadedKeySet);
         String startString = loadedKeySet.lookup(APPLY_NAMESPACE + "/some/value").getString();
-        KeySet returnedSet = typoError.applyTypoError(loadedKeySet, APPLY_NAMESPACE + "/some/value",
-                "abcdef", TypoError.Metadata.TYPO_CHANGE_CHAR);
+        KeySet returnedSet = typoError.apply(
+                new InjectionData(loadedKeySet, "abcdef", APPLY_NAMESPACE + "/some/value", TypoError.Metadata.TYPO_CHANGE_CHAR));
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
@@ -107,8 +109,8 @@ public class TypoErrorTest extends AbstractErrorTest {
     public void insertSpace_shouldWork() throws Exception {
         KeySet.printKeySet(loadedKeySet);
         String startString = loadedKeySet.lookup(APPLY_NAMESPACE + "/some/value").getString();
-        KeySet returnedSet = typoError.applyTypoError(loadedKeySet, APPLY_NAMESPACE + "/some/value",
-                "abcdef", TypoError.Metadata.TYPO_SPACE);
+        KeySet returnedSet = typoError.apply(
+                new InjectionData(loadedKeySet, "abcdef", APPLY_NAMESPACE + "/some/value", TypoError.Metadata.TYPO_SPACE));
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
@@ -125,8 +127,8 @@ public class TypoErrorTest extends AbstractErrorTest {
     public void toggleCase_shouldWork() throws Exception {
         KeySet.printKeySet(loadedKeySet);
         String startString = loadedKeySet.lookup(APPLY_NAMESPACE + "/some/value").getString();
-        KeySet returnedSet = typoError.applyTypoError(loadedKeySet, APPLY_NAMESPACE + "/some/value",
-                "abcdef", TypoError.Metadata.TYPO_TOGGLE);
+        KeySet returnedSet = typoError.apply(
+                new InjectionData(loadedKeySet, "abcdef", APPLY_NAMESPACE + "/some/value", TypoError.Metadata.TYPO_TOGGLE));
         KeySet.printKeySet(loadedKeySet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();
@@ -141,8 +143,8 @@ public class TypoErrorTest extends AbstractErrorTest {
         KeySet emptyKeySet = KeySet.create();
         KeySet.printKeySet(emptyKeySet);
         String defaultValue = "abcdef";
-        KeySet returnedSet = typoError.applyTypoError(emptyKeySet, APPLY_NAMESPACE + "/some/value",
-                defaultValue, TypoError.Metadata.TYPO_DELETION);
+        KeySet returnedSet = typoError.apply(
+                new InjectionData(emptyKeySet, defaultValue, APPLY_NAMESPACE + "/some/value", TypoError.Metadata.TYPO_DELETION));
         KeySet.printKeySet(returnedSet);
         kdbService.set(returnedSet, APPLY_NAMESPACE);
         String newString = returnedSet.lookup(APPLY_NAMESPACE + "/some/value").getString();

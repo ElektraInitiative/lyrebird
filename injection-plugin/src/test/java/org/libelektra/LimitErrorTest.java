@@ -1,10 +1,12 @@
 package org.libelektra;
 
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.libelektra.errortypes.InjectionData;
+import org.libelektra.errortypes.LimitError;
 import org.libelektra.service.KDBService;
+import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,58 +17,43 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 
-public class LimitErrorTest {
+public class LimitErrorTest extends AbstractErrorTest {
 
     private final static Logger LOG = LoggerFactory.getLogger(LimitErrorTest.class);
 
-    private InjectionPlugin injectionPlugin;
-    private KDB kdb;
     private KeySet loadedKeySet;
-    private Key testKey;
+
+    private LimitError limitError;
+    private Key injectKey;
 
 
-//    @Before
-//    public void setUp() throws KDB.KDBException {
-//        KDBService kdbService = new KDBService();
-//        injectionPlugin = new InjectionPlugin(structureError, typoError, semanticError, resourceError, domainError, limitError, kdbService);
-//        kdb = kdbService.getInstance();
-//        loadedKeySet = KeySet.create();
-//        kdb.get(loadedKeySet, ROOT_KEY);
-//        testKey = Key.create(ROOT_KEY + "/some/value", "350");
-//        loadedKeySet.append(testKey);
-//    }
-//
-//    @Test
-//    public void limitError_shouldWork() throws Exception {
-//        String minValue = "0";
-//        String maxValue = "1000";
-//        testKey.setMeta(LIMIT_ERROR_MIN.getMetadata(), minValue);
-//        testKey.setMeta(LIMIT_ERROR_MAX.getMetadata(), maxValue);
-//        testKey.setMeta(InjectionPlugin.SEED_META, "411");
-//
-//        KeySet.printKeySet(loadedKeySet);
-//        kdb.set(loadedKeySet, ROOT_KEY);
-//        injectionPlugin.kdbSet(loadedKeySet, ROOT_KEY, "user/tests/injectplugin");
-//        KeySet.printKeySet(loadedKeySet);
-//
-//        String newString = loadedKeySet.lookup(testKey.getName()).getString();
-//        assertThat("Neither min nor max value was applied in limit error!",
-//                newString.equals(minValue) || newString.equals(maxValue),
-//                is(true));
-//        assertThat("Metadata MIN was not removed",
-//                loadedKeySet.lookup(testKey.getName())
-//                        .getMeta(LIMIT_ERROR_MIN.getMetadata()).getName(),
-//                nullValue());
-//        assertThat("Metadata MAX was not removed",
-//                loadedKeySet.lookup(testKey.getName())
-//                        .getMeta(LIMIT_ERROR_MAX.getMetadata()).getName(),
-//                nullValue());
-//    }
-//
-//
-//    @After
-//    public void tearDown() throws KDB.KDBException {
-//        Util.cleanUp(loadedKeySet, kdb);
-//    }
+    @Before
+    public void setUp() throws KDB.KDBException {
+        KDBService kdbService = new KDBService();
+        limitError = new LimitError(new RandomizerService(100));
+        loadedKeySet = KeySet.create();
+        kdbService.get(loadedKeySet, TEST_NAMESPACE);
+        loadedKeySet.append(Key.create(APPLY_NAMESPACE, "600"));
+        injectKey = Key.create(INJECT_NAMESPACE + "/some/value", "");
+    }
+
+    @Test
+    public void limitError_shouldWork() throws Exception {
+        String minValue = "0";
+        String maxValue = "1000";
+        injectKey.setMeta(LIMIT_ERROR_MIN.getMetadata(), minValue);
+        injectKey.setMeta(LIMIT_ERROR_MAX.getMetadata(), maxValue);
+
+        KeySet.printKeySet(loadedKeySet);
+        kdbService.set(loadedKeySet, ROOT_KEY);
+        KeySet returnedKeySet = limitError.apply(new InjectionData(loadedKeySet, injectKey, null, APPLY_NAMESPACE
+                , LIMIT_ERROR_MAX));
+        KeySet.printKeySet(returnedKeySet);
+
+        String newString = returnedKeySet.lookup(APPLY_NAMESPACE).getString();
+        assertThat("Neither min nor max value was applied in limit error!",
+                newString.equals(minValue) || newString.equals(maxValue),
+                is(true));
+    }
 
 }

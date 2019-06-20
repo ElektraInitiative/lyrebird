@@ -62,6 +62,10 @@ public class KDBService {
         kdb.get(set, parentKey);
     }
 
+    public void get(KeySet set, String parentKey) throws KDB.KDBException {
+        kdb.get(set, Key.create(parentKey));
+    }
+
     public Key lookup(String lookup) throws KDB.KDBException {
         return allKeys.lookup(lookup);
     }
