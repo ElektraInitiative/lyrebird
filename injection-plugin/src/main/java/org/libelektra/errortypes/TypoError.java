@@ -4,6 +4,8 @@ import org.libelektra.InjectionMeta;
 import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
+import org.libelektra.model.InjectionData;
+import org.libelektra.model.InjectionDataResult;
 import org.libelektra.service.KDBService;
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
@@ -29,7 +31,8 @@ public class TypoError extends AbstractErrorType {
         this.kdbService = kdbService;
     }
 
-    public KeySet apply(InjectionData injectionData) throws KDB.KDBException {
+    @Override
+    public KeySet doInject(InjectionData injectionData) throws KDB.KDBException {
         
         if (injectionData.getInjectionType().equals(Metadata.TYPO_TRANSPOSITION)) {
             return transposition(injectionData.getSet(), injectionData.getInjectPath(), injectionData.getDefaultValue());
@@ -64,6 +67,7 @@ public class TypoError extends AbstractErrorType {
         String value = keyToChange.getString();
         if (value.length() < 2) {
             LOG.warn("Cannot transpose a single character");
+            this.injectionDataResult = new InjectionDataResult.Builder(false).build();
             return set;
         }
 
@@ -83,9 +87,12 @@ public class TypoError extends AbstractErrorType {
         String newValue = sb.toString();
         keyToChange.setString(newValue);
 
-        String message = String.format("Changing [%s ===> %s] on %s",
-                value, newValue, keyToChange.getName());
-        LOG.info("{}", message);
+        this.injectionDataResult = new InjectionDataResult.Builder(true)
+                .withOldValue(value)
+                .withNewValue(newValue)
+                .withKey(keyToChange.getName())
+                .withInjectionMeta(Metadata.TYPO_TRANSPOSITION)
+                .build();
         set.append(keyToChange);
         return set;
     }
@@ -100,9 +107,12 @@ public class TypoError extends AbstractErrorType {
 
         String newString = new StringBuilder(value).insert(position, randomChar).toString();
 
-        String message = String.format("Inserted [%s ===> %s] on %s",
-                value, newString, keyToChange.getName());
-        LOG.info(message);
+        this.injectionDataResult = new InjectionDataResult.Builder(true)
+                .withOldValue(value)
+                .withNewValue(newString)
+                .withKey(keyToChange.getName())
+                .withInjectionMeta(Metadata.TYPO_INSERTION)
+                .build();
 
         keyToChange.setString(newString);
         set.append(keyToChange);
@@ -118,9 +128,12 @@ public class TypoError extends AbstractErrorType {
                 .deleteCharAt(randomizerService.getNextInt(value.length()))
                 .toString();
 
-        String message = String.format("Deletion [%s ===> %s] on %s",
-                value, newString, keyToChange.getName());
-        LOG.info(message);
+        this.injectionDataResult = new InjectionDataResult.Builder(true)
+                .withOldValue(value)
+                .withNewValue(newString)
+                .withKey(keyToChange.getName())
+                .withInjectionMeta(Metadata.TYPO_DELETION)
+                .build();
 
         keyToChange.setString(newString);
         set.append(keyToChange);
@@ -139,9 +152,13 @@ public class TypoError extends AbstractErrorType {
         sb.setCharAt(position, randomChar);
 
         String newString = sb.toString();
-        String message = String.format("Changing Char [%s ===> %s] on %s",
-                value, newString, keyToChange.getName());
-        LOG.info(message);
+
+        this.injectionDataResult = new InjectionDataResult.Builder(true)
+                .withOldValue(value)
+                .withNewValue(newString)
+                .withKey(keyToChange.getName())
+                .withInjectionMeta(Metadata.TYPO_CHANGE_CHAR)
+                .build();
 
         keyToChange.setString(newString);
         set.append(keyToChange);
@@ -166,9 +183,12 @@ public class TypoError extends AbstractErrorType {
         }
 
         String newString = sb.toString();
-        String message = String.format("Inserting space [%s ===> '%s'] on %s",
-                value, newString, keyToChange.getName());
-        LOG.info(message);
+        this.injectionDataResult = new InjectionDataResult.Builder(true)
+                .withOldValue(value)
+                .withNewValue(newString)
+                .withKey(keyToChange.getName())
+                .withInjectionMeta(Metadata.TYPO_SPACE)
+                .build();
 
         keyToChange.setString(newString);
         set.append(keyToChange);
@@ -181,6 +201,8 @@ public class TypoError extends AbstractErrorType {
         String value = keyToChange.getString();
 
         if (!value.matches(".*[a-zA-Z]+.*")) {
+            this.injectionDataResult = new InjectionDataResult.Builder(false)
+                    .build();
             LOG.warn("Cannot toggle non-alphabetical characters");
             return set;
         }
@@ -208,9 +230,12 @@ public class TypoError extends AbstractErrorType {
         String newString = String.valueOf(valueAsArray);
         keyToChange.setString(newString);
 
-        String message = String.format("Toggle Case [%s ===> %s] on %s",
-                value, newString, keyToChange.getName());
-        LOG.info("{}", message);
+        this.injectionDataResult = new InjectionDataResult.Builder(true)
+                .withOldValue(value)
+                .withNewValue(newString)
+                .withKey(keyToChange.getName())
+                .withInjectionMeta(Metadata.TYPO_TOGGLE)
+                .build();
         set.append(keyToChange);
         return set;
     }
@@ -231,6 +256,11 @@ public class TypoError extends AbstractErrorType {
 
         public String getMetadata() {
             return metadata;
+        }
+
+        @Override
+        public String getCategory() {
+            return "Typo Error";
         }
 
         public static boolean hasMetadata(String keyMeta) {

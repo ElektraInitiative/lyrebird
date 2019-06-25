@@ -1,6 +1,7 @@
 package org.libelektra;
 
 import org.libelektra.errortypes.*;
+import org.libelektra.model.InjectionData;
 import org.libelektra.service.KDBService;
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;

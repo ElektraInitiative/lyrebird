@@ -3,6 +3,7 @@ package org.libelektra.errortypes;
 import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
+import org.libelektra.model.InjectionData;
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,8 @@ public class DomainError extends AbstractErrorType {
         super(randomizerService);
     }
 
-    public KeySet apply(InjectionData injectionData) {
+    @Override
+    public KeySet doInject(InjectionData injectionData) {
         injectionData.getInjectKey().rewindMeta();
         if (injectionData.getInjectionType().equals(Metadata.DOMAIN_ERROR)) {
             return domainError(injectionData.getSet(), injectionData.getInjectKey(), injectionData.getInjectPath());
@@ -77,6 +79,11 @@ public class DomainError extends AbstractErrorType {
 
         public String getMetadata() {
             return metadata;
+        }
+
+        @Override
+        public String getCategory() {
+            return "Domain Error";
         }
 
         public static boolean hasMetadata(String keyMeta) {

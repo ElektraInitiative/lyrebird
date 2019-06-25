@@ -2,7 +2,7 @@ package org.libelektra;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.libelektra.errortypes.InjectionData;
+import org.libelektra.model.InjectionData;
 import org.libelektra.errortypes.StructureError;
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;

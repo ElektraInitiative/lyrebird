@@ -3,6 +3,8 @@ package org.libelektra.errortypes;
 import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
+import org.libelektra.model.InjectionData;
+import org.libelektra.model.InjectionDataResult;
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +25,8 @@ public class SemanticError extends AbstractErrorType {
         super(randomizerService);
     }
 
-    public KeySet apply(InjectionData injectionData) {
+    @Override
+    public KeySet doInject(InjectionData injectionData) {
         injectionData.getInjectKey().rewindMeta();
         if (injectionData.getInjectionType().equals(Metadata.SEMANTIC_ERROR)) {
             return semanticError(injectionData.getSet(), injectionData.getInjectKey(), injectionData.getInjectPath());
@@ -47,9 +50,12 @@ public class SemanticError extends AbstractErrorType {
         newKey.setString(newValue);
         set.append(newKey);
 
-        String message = String.format("Semantic Error [%s ===> %s] on %s",
-                value, newValue, injectPath);
-        LOG.debug(message);
+        this.injectionDataResult = new InjectionDataResult.Builder(true)
+                .withOldValue(value)
+                .withNewValue(newValue)
+                .withKey(injectPath)
+                .withInjectionMeta(Metadata.SEMANTIC_ERROR)
+                .build();
 
         return set;
     }
@@ -75,6 +81,11 @@ public class SemanticError extends AbstractErrorType {
 
         public String getMetadata() {
             return metadata;
+        }
+
+        @Override
+        public String getCategory() {
+            return "Semantic Error";
         }
 
         public static boolean hasMetadata(String keyMeta) {

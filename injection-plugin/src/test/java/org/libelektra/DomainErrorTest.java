@@ -3,7 +3,7 @@ package org.libelektra;
 import org.junit.Before;
 import org.junit.Test;
 import org.libelektra.errortypes.DomainError;
-import org.libelektra.errortypes.InjectionData;
+import org.libelektra.model.InjectionData;
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

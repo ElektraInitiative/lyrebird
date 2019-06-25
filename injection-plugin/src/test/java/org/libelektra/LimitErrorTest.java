@@ -3,7 +3,7 @@ package org.libelektra;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.libelektra.errortypes.InjectionData;
+import org.libelektra.model.InjectionData;
 import org.libelektra.errortypes.LimitError;
 import org.libelektra.service.KDBService;
 import org.libelektra.service.RandomizerService;

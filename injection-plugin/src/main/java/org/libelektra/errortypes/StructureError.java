@@ -4,6 +4,8 @@ import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 
+import org.libelektra.model.InjectionData;
+import org.libelektra.model.InjectionDataResult;
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +36,8 @@ public class StructureError extends AbstractErrorType{
         this.parentPath = parentPath;
     }
 
-    public KeySet apply(InjectionData injectionData) {
+    @Override
+    public KeySet doInject(InjectionData injectionData) {
         if (injectionData.getInjectionType().equals(Metadata.SECTION_REMOVE)) {
             return removeSection(injectionData.getSet(), injectionData.getInjectPath());
         } else if (injectionData.getInjectionType().equals(Metadata.SECTION_REALLOCATE)) {
@@ -58,7 +61,12 @@ public class StructureError extends AbstractErrorType{
     private KeySet removeSection(KeySet set, String path) {
         LOG.debug("Applying Structure Error [removeSection] to {}", path);
         removeSectionNoLogging(set, path);
-        LOG.info("Removing: {} ===> REMOVE", path);
+        this.injectionDataResult = new InjectionDataResult.Builder(true)
+                .withOldValue(path)
+                .withNewValue("null")
+                .withKey(path)
+                .withInjectionMeta(Metadata.SECTION_REMOVE)
+                .build();
         return set;
     }
 
@@ -86,8 +94,12 @@ public class StructureError extends AbstractErrorType{
         //Change the path of every Key and add it to a new KS
         KeySet extractedKSwithNewRoot = changePathOfKeySet(extractedKS, toSubstitute, newRoot);
 
-        String message = String.format("Reallocate %s ===> %s", path, newRoot);
-        LOG.info(message);
+        this.injectionDataResult = new InjectionDataResult.Builder(true)
+                .withOldValue(path)
+                .withNewValue(newRoot)
+                .withKey(path)
+                .withInjectionMeta(Metadata.SECTION_REALLOCATE)
+                .build();
         removeSectionNoLogging(set, path);
         set.append(extractedKSwithNewRoot);
 
@@ -106,9 +118,12 @@ public class StructureError extends AbstractErrorType{
         //Change the path of every Key and add it to a new KS
         KeySet extractedKSwithNewRoot = changePathOfKeySet(extractedKS, toSubstitute, newRoot);
         set.append(extractedKSwithNewRoot);
-
-        String message = String.format("Duplicate %s ===> %s", path, newRoot);
-        LOG.info(message);
+        this.injectionDataResult = new InjectionDataResult.Builder(true)
+                .withOldValue(path)
+                .withNewValue(newRoot)
+                .withKey(path)
+                .withInjectionMeta(Metadata.SECTION_DUPLICATE)
+                .build();
 
         return set;
     }
@@ -176,6 +191,11 @@ public class StructureError extends AbstractErrorType{
 
         public String getMetadata() {
             return metadata;
+        }
+
+        @Override
+        public String getCategory() {
+            return "Structure Error";
         }
 
         public static boolean hasMetadata(String keyMeta) {

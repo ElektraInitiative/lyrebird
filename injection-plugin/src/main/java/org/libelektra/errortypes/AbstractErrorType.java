@@ -4,23 +4,33 @@ import org.libelektra.InjectionMeta;
 import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
+import org.libelektra.model.InjectionData;
+import org.libelektra.model.InjectionDataResult;
 import org.libelektra.service.RandomizerService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static java.util.Objects.nonNull;
 
 public abstract class AbstractErrorType {
 
     protected RandomizerService randomizerService;
+    protected InjectionDataResult injectionDataResult;
 
     public abstract int getInjectionInt();
 
     public abstract List<InjectionMeta> getBelongingMetadatas();
 
-    public abstract KeySet apply(InjectionData injectionData) throws KDB.KDBException;
+    public KeySet apply(InjectionData injectionData) throws KDB.KDBException {
+        KeySet result = doInject(injectionData);
+        if (injectionDataResult != null) {
+            injectionDataResult.logInjection();
+        }
+        return result;
+    }
+
+    abstract KeySet doInject(InjectionData injectionData) throws KDB.KDBException;
 
     public AbstractErrorType(RandomizerService randomizerService) {
         this.randomizerService = randomizerService;

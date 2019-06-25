@@ -1,4 +1,4 @@
-package org.libelektra.errortypes;
+package org.libelektra.model;
 
 import org.libelektra.InjectionMeta;
 import org.libelektra.Key;

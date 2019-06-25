@@ -1,6 +1,6 @@
 package org.libelektra;
 
-import org.libelektra.errortypes.InjectionData;
+import org.libelektra.model.InjectionData;
 import org.libelektra.errortypes.ResourceError;
 import org.junit.Before;
 import org.junit.Test;

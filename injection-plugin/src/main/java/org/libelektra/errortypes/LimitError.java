@@ -3,6 +3,8 @@ package org.libelektra.errortypes;
 import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
+import org.libelektra.model.InjectionData;
+import org.libelektra.model.InjectionDataResult;
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +28,8 @@ public class LimitError extends AbstractErrorType {
         super(randomizerService);
     }
 
-    public KeySet apply(InjectionData injectionData) {
+    @Override
+    public KeySet doInject(InjectionData injectionData) {
         injectionData.getInjectKey().rewindMeta();
         if (injectionData.getInjectionType().equals(LimitError.Metadata.LIMIT_ERROR_MIN) ||
                 injectionData.getInjectionType().equals(LimitError.Metadata.LIMIT_ERROR_MAX)) {
@@ -49,9 +52,12 @@ public class LimitError extends AbstractErrorType {
 
         int random = randomizerService.getNextInt(2);
         String newValue;
+        InjectionMeta injectionMeta;
         if (isNull(max) || random == 0) {
             newValue = min;
+            injectionMeta = Metadata.LIMIT_ERROR_MIN;
         } else {
+            injectionMeta = Metadata.LIMIT_ERROR_MAX;
             newValue = max;
         }
 
@@ -59,9 +65,12 @@ public class LimitError extends AbstractErrorType {
         newKey.setString(newValue);
         set.append(newKey);
 
-        String message = String.format("Limit Error [%s ===> %s] on %s",
-                value, newValue, injectPath);
-        LOG.info(message);
+        this.injectionDataResult = new InjectionDataResult.Builder(true)
+                .withOldValue(value)
+                .withNewValue(newValue)
+                .withKey(injectPath)
+                .withInjectionMeta(injectionMeta)
+                .build();
 
         return set;
     }
@@ -88,6 +97,11 @@ public class LimitError extends AbstractErrorType {
 
         public String getMetadata() {
             return metadata;
+        }
+
+        @Override
+        public String getCategory() {
+            return "Limit Error";
         }
 
         public static boolean hasMetadata(String keyMeta) {
