@@ -1,8 +1,8 @@
 logging:
   level:
     root: ERROR
-    org.libelektra: DEBUG
+    org.libelektra: INFO
     org.libelektra.errortypes: INFO
 
-randomizer.seed: 17
+randomizer.seed: 19
 config.mountpoint: "system/lcdproc"

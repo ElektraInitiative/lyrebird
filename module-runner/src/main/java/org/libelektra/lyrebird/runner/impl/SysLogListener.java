@@ -22,15 +22,15 @@ public class SysLogListener extends TailerListenerAdapter {
     @Override
     public void handle(String line) {
         super.handle(line);
-        String subStringDate = line.substring(0, 15);
-        subStringDate = subStringDate.replaceAll("\\s+", " ");
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy MMM d HH:mm:ss")
-                .withLocale(Locale.US);
-        LocalDateTime syslogTime = LocalDateTime.parse("2018 "+subStringDate, formatter)
-                .plusSeconds(2); //Needed or isAfter() will return false
+//        String subStringDate = line.substring(0, 15);
+//        subStringDate = subStringDate.replaceAll("\\s+", " ");
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy MMM d HH:mm:ss")
+//                .withLocale(Locale.US);
+//        LocalDateTime syslogTime = LocalDateTime.parse("2018 "+subStringDate, formatter)
+//                .plusSeconds(2); //Needed or isAfter() will return false
 
         //Filter out only messages which contain LCDd and are current
-        if (line.contains("LCDd") && syslogTime.isAfter(currentDate)) {
+        if (line.contains("LCDd") /*&& syslogTime.isAfter(currentDate)*/) {
             logMessages.add(line);
         }
     }

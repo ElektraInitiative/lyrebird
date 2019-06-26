@@ -21,11 +21,10 @@ public class LimitError extends AbstractErrorType {
 
     private final static Logger LOG = LoggerFactory.getLogger(LimitError.class);
 
-    public static int TYPE_ID = 6;
-
     @Autowired
     public LimitError(RandomizerService randomizerService) {
         super(randomizerService);
+        this.TYPE_ID = 6;
     }
 
     @Override

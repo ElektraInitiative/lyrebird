@@ -23,12 +23,12 @@ public class TypoError extends AbstractErrorType {
     private final static char[] availableInsertionCharacters =
             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".toCharArray();
     private final KDBService kdbService;
-    public static int TYPE_ID = 4;
 
     @Autowired
     public TypoError(RandomizerService randomizerService, KDBService kdbService) {
         super(randomizerService);
         this.kdbService = kdbService;
+        this.TYPE_ID = 4;
     }
 
     @Override
@@ -59,6 +59,11 @@ public class TypoError extends AbstractErrorType {
     @Override
     public List<InjectionMeta> getBelongingMetadatas() {
         return Arrays.asList(Metadata.values());
+    }
+
+    @Override
+    public boolean canBeApplied(List<Integer> injectionInt) {
+        return true;
     }
 
     private KeySet transposition(KeySet set, String injectPath, String defaultValue) throws KDB.KDBException {

@@ -1,24 +1,33 @@
 package org.libelektra.lyrebird.model;
 
+import org.libelektra.model.InjectionDataResult;
+
 public class LogEntry {
 
     private RESULT_TYPE resultType;
-    private String errorType;
-    private String injectedError;
     private String logMessage;
     private String errorLogEntry;
+    private InjectionDataResult injectionDataResult;
 
-    public LogEntry(RESULT_TYPE resultType, String errorType,
-                    String injectedError, String logMessage,
-                    String errorLogEntry) {
+    public LogEntry(RESULT_TYPE resultType,
+                    String logMessage,
+                    String errorLogEntry,
+                    InjectionDataResult injectionDataResult) {
         this.resultType = resultType;
-        this.errorType = errorType;
-        this.injectedError = injectedError;
         this.logMessage = logMessage;
         this.errorLogEntry = errorLogEntry;
+        this.injectionDataResult = injectionDataResult;
     }
 
     public LogEntry() {
+    }
+
+    public void setInjectionDataResult(InjectionDataResult injectionDataResult) {
+        this.injectionDataResult = new InjectionDataResult(injectionDataResult);
+    }
+
+    public InjectionDataResult getInjectionDataResult() {
+        return injectionDataResult;
     }
 
     public void setErrorLogEntry(String errorLogEntry) {
@@ -31,14 +40,6 @@ public class LogEntry {
 
     public RESULT_TYPE getResultType() {
         return resultType;
-    }
-
-    public String getErrorType() {
-        return errorType;
-    }
-
-    public String getInjectedError() {
-        return injectedError;
     }
 
     public String getLogMessage() {
@@ -55,14 +56,6 @@ public class LogEntry {
         this.resultType = resultType;
     }
 
-    public void setErrorType(String errorType) {
-        this.errorType = errorType;
-    }
-
-    public void setInjectedError(String injectedError) {
-        this.injectedError = injectedError;
-    }
-
     public void setLogMessage(String logMessage) {
         this.logMessage = logMessage;
     }
@@ -71,10 +64,9 @@ public class LogEntry {
     public String toString() {
         return "LogEntry{" +
                 "resultType=" + resultType +
-                ", errorType='" + errorType + '\'' +
-                ", injectedError='" + injectedError + '\'' +
-                ",\nlogMessage='" + logMessage + '\'' +
-                ",\nerrorMessage='" + errorLogEntry + '\'' +
+                ", logMessage='" + logMessage + '\'' +
+                ", errorLogEntry='" + errorLogEntry + '\'' +
+                ", injectionDataResult=" + injectionDataResult +
                 '}';
     }
 }

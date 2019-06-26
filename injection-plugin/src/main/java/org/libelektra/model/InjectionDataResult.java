@@ -17,6 +17,14 @@ public class InjectionDataResult {
     private InjectionDataResult() {
     }
 
+    public InjectionDataResult(InjectionDataResult injectionDataResult) {
+        this.wasInjectionSuccessful = injectionDataResult.wasInjectionSuccessful;
+        this.oldValue = injectionDataResult.oldValue;
+        this.newValue = injectionDataResult.newValue;
+        this.key = injectionDataResult.key;
+        this.injectionMeta = injectionDataResult.injectionMeta;
+    }
+
     public boolean isWasInjectionSuccessful() {
         return wasInjectionSuccessful;
     }
@@ -50,8 +58,8 @@ public class InjectionDataResult {
 
     public void logInjection() {
         if (wasInjectionSuccessful) {
-            String log = String.format("%15s %-70s on %s", injectionMeta.getCategory(),
-                    String.format("[%s ==> %s]", oldValue, newValue),
+            String log = String.format("%15s %-60s on %s", injectionMeta.getCategory(),
+                    String.format("[%s ==> “%s“]", oldValue, newValue),
                     key);
             LOG.info(log);
         }

@@ -4,6 +4,7 @@ import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.libelektra.model.InjectionData;
+import org.libelektra.model.InjectionDataResult;
 import org.libelektra.service.RandomizerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +19,10 @@ public class DomainError extends AbstractErrorType {
 
     private final static Logger LOG = LoggerFactory.getLogger(DomainError.class);
 
-    public int TYPE_ID = 5;
-
     @Autowired
     public DomainError(RandomizerService randomizerService) {
         super(randomizerService);
+        this.TYPE_ID = 5;
     }
 
     @Override
@@ -51,9 +51,12 @@ public class DomainError extends AbstractErrorType {
         newKey.setString(newValue);
         set.append(newKey);
 
-        String message = String.format("Domain Error [%s ===> %s] on %s",
-                value, newValue, injectPath);
-        LOG.info(message);
+        this.injectionDataResult = new InjectionDataResult.Builder(true)
+                .withOldValue(value)
+                .withNewValue(newValue)
+                .withKey(injectPath)
+                .withInjectionMeta(Metadata.DOMAIN_ERROR)
+                .build();
 
         return set;
     }

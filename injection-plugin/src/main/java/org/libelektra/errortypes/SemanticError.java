@@ -18,11 +18,11 @@ import java.util.List;
 public class SemanticError extends AbstractErrorType {
 
     private final static Logger LOG = LoggerFactory.getLogger(SemanticError.class);
-    public static int TYPE_ID = 2;
 
     @Autowired
     public SemanticError(RandomizerService randomizerService) {
         super(randomizerService);
+        this.TYPE_ID = 2;
     }
 
     @Override

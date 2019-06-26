@@ -19,7 +19,11 @@ public class ResourceError extends AbstractErrorType {
 
     private final static Logger LOG = LoggerFactory.getLogger(ResourceError.class);
 
-    public static int TYPE_ID = 3;
+    @Autowired
+    public ResourceError(RandomizerService randomizerService) {
+        super(randomizerService);
+        this.TYPE_ID = 3;
+    }
 
     @Override
     public int getInjectionInt() {
@@ -29,11 +33,6 @@ public class ResourceError extends AbstractErrorType {
     @Override
     public List<InjectionMeta> getBelongingMetadatas() {
         return Arrays.asList(Metadata.values());
-    }
-
-    @Autowired
-    public ResourceError(RandomizerService randomizerService) {
-        super(randomizerService);
     }
 
     @Override

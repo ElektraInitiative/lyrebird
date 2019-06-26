@@ -17,8 +17,13 @@ public abstract class AbstractErrorType {
 
     protected RandomizerService randomizerService;
     protected InjectionDataResult injectionDataResult;
+    protected int TYPE_ID;
 
     public abstract int getInjectionInt();
+
+    public boolean canBeApplied(List<Integer> injectionInts) {
+        return injectionInts.contains(TYPE_ID);
+    }
 
     public abstract List<InjectionMeta> getBelongingMetadatas();
 
@@ -28,6 +33,13 @@ public abstract class AbstractErrorType {
             injectionDataResult.logInjection();
         }
         return result;
+    }
+
+    public InjectionDataResult getInjectionDataResult() {
+        if (injectionDataResult == null) {
+            return new InjectionDataResult.Builder(false).build();
+        }
+        return injectionDataResult;
     }
 
     abstract KeySet doInject(InjectionData injectionData) throws KDB.KDBException;

@@ -7,8 +7,6 @@ import org.libelektra.service.KDBService;
 
 import java.util.Iterator;
 
-import static org.libelektra.InjectionPlugin.ROOT_KEY;
-
 public abstract class AbstractErrorTest {
 
     protected static KDBService kdbService;

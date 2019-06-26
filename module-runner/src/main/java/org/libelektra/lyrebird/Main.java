@@ -4,6 +4,7 @@ import org.libelektra.KDB;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.libelektra.Plugin;
+import org.libelektra.lyrebird.model.LogEntry;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
 import org.libelektra.service.KDBService;
 import org.slf4j.Logger;
@@ -13,6 +14,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 
 import static org.libelektra.service.KDBService.ROOT;
 
@@ -23,6 +27,7 @@ public class Main implements CommandLineRunner {
 
     private final ApplicationRunner runner;
     private final KDBService kdbService;
+    private Collection<LogEntry> allLogs;
 
     static {
         System.setProperty("jna.library.path", "/usr/local/lib");
@@ -32,15 +37,30 @@ public class Main implements CommandLineRunner {
                 KDBService kdbService) {
         this.runner = runner;
         this.kdbService = kdbService;
+        allLogs = new ArrayList<>();
     }
 
     @Override
     public void run(String... args) throws Exception {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 50; i++) {
             runner.resetConfiguration();
-            runner.injectInConfiguration();
+            boolean successful = runner.injectInConfiguration();
+            if (!successful) {
+                i--;
+                continue;
+            }
+            CompletableFuture.runAsync(() -> {
+                try {
+                    runner.start();
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+            Thread.sleep(300);
+            runner.stop();
+            allLogs.add(runner.getLogEntry());
         }
-//        runner.close();
+        allLogs.stream().filter(entry -> !entry.getLogMessage().startsWith("Error opening")).forEach(entry -> LOG.info(entry.toString()));
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {

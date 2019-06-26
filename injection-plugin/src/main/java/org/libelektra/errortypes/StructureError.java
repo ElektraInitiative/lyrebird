@@ -26,14 +26,13 @@ public class StructureError extends AbstractErrorType{
     private final static Logger LOG = LoggerFactory.getLogger(StructureError.class);
     private final String parentPath;
 
-    public static int TYPE_ID = 1;
-
     @Autowired
     public StructureError(
             @Value("${config.mountpoint}") String parentPath,
             RandomizerService randomizerService) {
         super(randomizerService);
         this.parentPath = parentPath;
+        this.TYPE_ID = 1;
     }
 
     @Override
@@ -51,6 +50,11 @@ public class StructureError extends AbstractErrorType{
     @Override
     public int getInjectionInt() {
         return TYPE_ID;
+    }
+
+    @Override
+    public boolean canBeApplied(List<Integer> injectionInt) {
+        return true;
     }
 
     @Override

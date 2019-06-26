@@ -98,8 +98,8 @@ public class CassandraRunner implements ApplicationRunner {
     }
 
     @Override
-    public void injectInConfiguration() {
-
+    public boolean injectInConfiguration() {
+        return true;
     }
 
     @Override
@@ -122,8 +122,8 @@ public class CassandraRunner implements ApplicationRunner {
         currentLogEntry.setErrorLogEntry(String.join("\n", errorLogs));
 
         //TODO!
-        currentLogEntry.setErrorType("UNDEFINED YET");
-        currentLogEntry.setInjectedError("UNDEFINED YET");
+//        currentLogEntry.setErrorType("UNDEFINED YET");
+//        currentLogEntry.setInjectedError("UNDEFINED YET");
     }
 
     @Override
