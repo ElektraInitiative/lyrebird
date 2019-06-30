@@ -3,7 +3,7 @@ package org.libelektra.lyrebird.runner.impl;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.Tailer;
 import org.libelektra.*;
-import org.libelektra.lyrebird.errortype.ErrorType;
+import org.libelektra.errortypes.AbstractErrorType;
 import org.libelektra.lyrebird.model.LogEntry;
 import org.libelektra.model.InjectionDataResult;
 import org.libelektra.service.KDBService;
@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PreDestroy;
@@ -20,16 +21,15 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Component
+@Profile("lcdproc")
 public class LCDprocRunner implements ApplicationRunner {
 
     private KDBService kdbService;
     private final static Logger LOG = LoggerFactory.getLogger(LCDprocRunner.class);
 
-    private Set<ErrorType> allowedErrorTypes;
     private Process process;
     private RandomizerService randomizerService;
     private final InjectionPlugin injectionPlugin;
@@ -62,6 +62,7 @@ public class LCDprocRunner implements ApplicationRunner {
         try {
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             File errorConfigFile = new File(classLoader.getResource(LCDSERVER_INJECT_CONFIG).getFile());
+            //TODO: Filter for settings with numbers
             File runConfig = new File(TEMP_ERROR_CONFIG);
             FileUtils.copyFile(errorConfigFile, runConfig);
             Util.executeCommand(String.format("kdb mount %s %s ni", TEMP_ERROR_CONFIG, KDB_LCDPROC_INJECT_PATH));
@@ -75,13 +76,12 @@ public class LCDprocRunner implements ApplicationRunner {
 
 
     @Override
-    public void start() throws IOException, InterruptedException {
+    public void start() throws IOException {
 
 //        String[] command = (new String[]{"gnome-terminal", "-e", String.format("LCDd -f -c %s", TEMP_RUN_CONFIG)});
         String[] command = new String[]{"LCDd", "-f", "-c", TEMP_RUN_CONFIG};
 
         process = new ProcessBuilder(command)
-//                .redirectErrorStream(true)
                 .start();
 
         handleLogMessage(process);
@@ -95,9 +95,7 @@ public class LCDprocRunner implements ApplicationRunner {
     public void stop() throws IOException, InterruptedException {
         Runtime.getRuntime().exec("killall -s SIGINT LCDd");
         process.waitFor();
-//        tailer.stop();
-//        handleLogMessage(sysLogListener.getLogMessages());
-        LOG.info("LCDd exitvalue: {}", process.exitValue());
+        LOG.debug("LCDd exitvalue: {}", process.exitValue());
     }
 
     @Override
@@ -182,6 +180,9 @@ public class LCDprocRunner implements ApplicationRunner {
             errorMessages = errorMessages.stream().filter(str -> !str.isEmpty()).collect(Collectors.toList());
             currentLogEntry.setLogMessage(String.join("\n", errorMessages));
             currentLogEntry.setInjectionDataResult(this.injectionDataResult);
+            if (errorMessages.size() > 0) {
+                currentLogEntry.setErrorLogEntry(errorMessages.get(0));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -193,11 +194,6 @@ public class LCDprocRunner implements ApplicationRunner {
     @Override
     public LogEntry getLogEntry() {
         return currentLogEntry;
-    }
-
-    @Override
-    public void setErrorTypes(Set<ErrorType> errorTypes) {
-        this.allowedErrorTypes = errorTypes;
     }
 
     @Override

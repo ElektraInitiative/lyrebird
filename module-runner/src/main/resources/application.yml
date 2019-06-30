@@ -4,5 +4,16 @@ logging:
     org.libelektra: INFO
     org.libelektra.errortypes: INFO
 
+
 randomizer.seed: 19
 config.mountpoint: "system/lcdproc"
+special.injections: "special-configurations/lcdproc"
+
+injection:
+  iterations: 6
+
+outputpath: "/home/wespe/Desktop"
+
+spring:
+  profiles:
+    active: lcdproc, all

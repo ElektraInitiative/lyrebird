@@ -1,22 +1,23 @@
 package org.libelektra.lyrebird.runner.impl;
 
 import org.apache.commons.io.input.Tailer;
-import org.libelektra.lyrebird.errortype.ErrorType;
 import org.libelektra.lyrebird.model.LogEntry;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Component
+@Profile("cassandra")
 public class CassandraRunner implements ApplicationRunner {
 
     private final static Logger LOG = LoggerFactory.getLogger(CassandraRunner.class);
-
-    private Set<ErrorType> allowedErrorTypes;
 
     private static final String USER = "wespe";
     private static final String CASSANDRA_VERSION = "3.11.2";
@@ -124,11 +125,6 @@ public class CassandraRunner implements ApplicationRunner {
         //TODO!
 //        currentLogEntry.setErrorType("UNDEFINED YET");
 //        currentLogEntry.setInjectedError("UNDEFINED YET");
-    }
-
-    @Override
-    public void setErrorTypes(Set<ErrorType> errorTypes) {
-        this.allowedErrorTypes = errorTypes;
     }
 
     @Override

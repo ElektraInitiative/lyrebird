@@ -6,9 +6,11 @@ import org.libelektra.KeySet;
 import org.libelektra.Plugin;
 import org.libelektra.lyrebird.model.LogEntry;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
+import org.libelektra.lyrebird.writer.LcdprocCsvOutputWriter;
 import org.libelektra.service.KDBService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -28,21 +30,26 @@ public class Main implements CommandLineRunner {
     private final ApplicationRunner runner;
     private final KDBService kdbService;
     private Collection<LogEntry> allLogs;
+    private final int iterations;
+    private final LcdprocCsvOutputWriter outputWriter;
 
     static {
         System.setProperty("jna.library.path", "/usr/local/lib");
     }
 
     public Main(ApplicationRunner runner,
-                KDBService kdbService) {
+                KDBService kdbService,
+                @Value("${injection.iterations}") int iterations, LcdprocCsvOutputWriter outputWriter) {
         this.runner = runner;
         this.kdbService = kdbService;
+        this.iterations = iterations;
+        this.outputWriter = outputWriter;
         allLogs = new ArrayList<>();
     }
 
     @Override
     public void run(String... args) throws Exception {
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < iterations; i++) {
             runner.resetConfiguration();
             boolean successful = runner.injectInConfiguration();
             if (!successful) {
@@ -60,6 +67,7 @@ public class Main implements CommandLineRunner {
             runner.stop();
             allLogs.add(runner.getLogEntry());
         }
+        outputWriter.write(allLogs);
         allLogs.stream().filter(entry -> !entry.getLogMessage().startsWith("Error opening")).forEach(entry -> LOG.info(entry.toString()));
     }
 
