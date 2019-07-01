@@ -14,11 +14,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.core.env.Environment;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 import static org.libelektra.service.KDBService.ROOT;
 
@@ -30,8 +37,11 @@ public class Main implements CommandLineRunner {
     private final ApplicationRunner runner;
     private final KDBService kdbService;
     private Collection<LogEntry> allLogs;
-    private final int iterations;
+    private int iterations;
+    private final String specialInjections;
     private final LcdprocCsvOutputWriter outputWriter;
+
+    private Environment env;
 
     static {
         System.setProperty("jna.library.path", "/usr/local/lib");
@@ -39,16 +49,32 @@ public class Main implements CommandLineRunner {
 
     public Main(ApplicationRunner runner,
                 KDBService kdbService,
-                @Value("${injection.iterations}") int iterations, LcdprocCsvOutputWriter outputWriter) {
+                @Value("${injection.iterations}") int iterations,
+                @Value("${special.injections}") String specialInjections,
+                Environment env,
+                LcdprocCsvOutputWriter outputWriter) {
+
+        this.specialInjections = specialInjections;
         this.runner = runner;
         this.kdbService = kdbService;
         this.iterations = iterations;
+        this.env = env;
         this.outputWriter = outputWriter;
         allLogs = new ArrayList<>();
     }
 
     @Override
     public void run(String... args) throws Exception {
+        boolean manualInjectionsActive = Arrays.asList(env.getActiveProfiles()).contains("manual");
+        if (manualInjectionsActive) {
+            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+            Path customInjections = Paths.get(classLoader.getResource(specialInjections).getPath());
+            List<Path> allFiles = Files.walk(customInjections)
+                    .filter(x -> !Files.isDirectory(x))
+                    .collect(Collectors.toList());
+            runManualInjections(allFiles);
+            return;
+        }
         for (int i = 0; i < iterations; i++) {
             runner.resetConfiguration();
             boolean successful = runner.injectInConfiguration();
@@ -68,7 +94,6 @@ public class Main implements CommandLineRunner {
             allLogs.add(runner.getLogEntry());
         }
         outputWriter.write(allLogs);
-        allLogs.stream().filter(entry -> !entry.getLogMessage().startsWith("Error opening")).forEach(entry -> LOG.info(entry.toString()));
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -78,16 +103,10 @@ public class Main implements CommandLineRunner {
 
 //        CassandraRunner.startClusterIfNotUp();
 //        ApplicationRunner runner = new CassandraRunner();
+    }
 
-//        runner.resetConfiguration();
-
-//        runner.close();
-//        runner.start();
-//        LOG.info("Sleeping");
-//        Thread.sleep(5000);
-//        runner.stop();
-//        LOG.info("{}", runner.getLogEntry());
-//        mainRun();
+    private void runManualInjections(List<Path> files) {
+        //TODO: Inject
     }
 
     private static void mainRun() {
