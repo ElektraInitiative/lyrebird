@@ -3,7 +3,6 @@ package org.libelektra.lyrebird.runner.impl;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.Tailer;
 import org.libelektra.*;
-import org.libelektra.errortypes.AbstractErrorType;
 import org.libelektra.lyrebird.model.LogEntry;
 import org.libelektra.model.InjectionDataResult;
 import org.libelektra.service.KDBService;
@@ -20,7 +19,6 @@ import javax.annotation.PreDestroy;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -43,10 +41,11 @@ public class LCDprocRunner implements ApplicationRunner {
 
     public final static String LCDSERVER_RUN_CONFIG = "lcdproc/LCDd-run.ini";
     public final static String LCDSERVER_INJECT_CONFIG = "lcdproc/LCDd-inject.ini";
-    public final static String TEMP_RUN_CONFIG = "/tmp/lcdd-tmp.conf";
     public final static String TEMP_ERROR_CONFIG = "/tmp/lcdd-inject.conf";
     public static String KDB_LCDPROC_PATH;
     public final static String KDB_LCDPROC_INJECT_PATH = ELEKTRA_NAMESPACE+"/inject/lcdproc";
+
+    private final String tmpRunConfig;
 
     private KeySet errorConfigKeySet;
 
@@ -54,7 +53,10 @@ public class LCDprocRunner implements ApplicationRunner {
     public LCDprocRunner(KDBService kdbService,
                          RandomizerService randomizerService,
                          InjectionPlugin injectionPlugin,
-                         @Value("${config.mountpoint}") String parentPath) throws KDB.KDBException {
+                         @Value("${config.mountpoint}") String parentPath,
+                         @Value("${inject.run-config-location}") String tmpRunConfig
+    ) throws KDB.KDBException {
+        this.tmpRunConfig = tmpRunConfig;
         this.injectionPlugin = injectionPlugin;
         KDB_LCDPROC_PATH = parentPath;
         this.kdbService = kdbService;
@@ -78,8 +80,8 @@ public class LCDprocRunner implements ApplicationRunner {
     @Override
     public void start() throws IOException {
 
-//        String[] command = (new String[]{"gnome-terminal", "-e", String.format("LCDd -f -c %s", TEMP_RUN_CONFIG)});
-        String[] command = new String[]{"LCDd", "-f", "-c", TEMP_RUN_CONFIG};
+//        String[] command = (new String[]{"gnome-terminal", "-e", String.format("LCDd -f -c %s", tmpRunConfig)});
+        String[] command = new String[]{"LCDd", "-f", "-c", tmpRunConfig};
 
         process = new ProcessBuilder(command)
                 .start();
@@ -142,10 +144,10 @@ public class LCDprocRunner implements ApplicationRunner {
             kdbService.close();
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             File initialConfigFile = new File(classLoader.getResource(LCDSERVER_RUN_CONFIG).getFile());
-            File runConfig = new File(TEMP_RUN_CONFIG);
+            File runConfig = new File(tmpRunConfig);
             FileUtils.deleteQuietly(runConfig);
             FileUtils.copyFile(initialConfigFile, runConfig);
-            Util.executeCommand(String.format("kdb mount %s %s ini", TEMP_RUN_CONFIG, KDB_LCDPROC_PATH));
+            Util.executeCommand(String.format("kdb mount %s %s ini", tmpRunConfig, KDB_LCDPROC_PATH));
             kdbService.initKDB();
             errorConfigKeySet = kdbService.getKeySetBelowPath(KDB_LCDPROC_INJECT_PATH);
         } catch (NullPointerException e) {

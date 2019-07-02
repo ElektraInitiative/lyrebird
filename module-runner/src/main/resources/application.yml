@@ -11,9 +11,20 @@ special.injections: "special-configurations/lcdproc"
 
 injection:
   iterations: 6
+  run-config-location: "/tmp/lcdd-tmp.conf"
+  timeout: 300
 
 outputpath: "/home/wespe/Desktop"
 
 spring:
   profiles:
-    active: lcdproc, all
+   active:
+    - lcdproc
+    - manual
+#    - all
+#    - domain
+#    - semantic
+#    - typo
+#    - structure
+#    - resource
+#    - limit
