@@ -10,7 +10,7 @@ config.mountpoint: "system/lcdproc"
 special.injections: "special-configurations/lcdproc"
 
 injection:
-  iterations: 6
+  iterations: 3
   run-config-location: "/tmp/lcdd-tmp.conf"
   timeout: 300
 
@@ -20,8 +20,8 @@ spring:
   profiles:
    active:
     - lcdproc
-    - manual
-#    - all
+#    - manual
+    - all
 #    - domain
 #    - semantic
 #    - typo
