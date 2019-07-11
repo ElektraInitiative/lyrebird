@@ -3,7 +3,7 @@ logging:
     root: ERROR
     org.libelektra: INFO
 #    org.libelektra.KeySet: DEBUG
-#    org.libelektra.Key: DEBUG
+    org.libelektra.Key: DEBUG
     org.libelektra.errortypes: INFO
 
 mountpoint:

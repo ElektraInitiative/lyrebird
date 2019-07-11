@@ -4,8 +4,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
 import org.libelektra.Plugin;
+import org.libelektra.model.InjectionConfiguration;
 import org.libelektra.model.SpecificationDataResult;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -15,26 +16,25 @@ import java.util.List;
 @Component
 public class SpecificationEnforcer {
 
-    private final String specPath;
-    private final String configPath;
+    private final InjectionConfiguration injectionConfiguration;
     private final List<Plugin> allPlugins;
     private final Key errorKey = Key.create("user/error");
 
+    @Autowired
     public SpecificationEnforcer(
-            @Value("${mountpoint.specification}") String specPath,
-            @Value("${mountpoint.config}") String configPath) {
-        this.specPath = specPath;
-        this.configPath = configPath;
+            InjectionConfiguration injectionConfiguration) {
+        this.injectionConfiguration = injectionConfiguration;
         allPlugins = new ArrayList<>();
         Arrays.stream(SpecPlugins.values()).forEach(
-                specPlugin -> allPlugins.add(new Plugin(specPlugin.getPluginName(), Key.create(specPath)))
+                specPlugin -> allPlugins.add(new Plugin(specPlugin.getPluginName(), Key.create(injectionConfiguration.getSpecPath())))
         );
     }
 
 
     public SpecificationDataResult checkSpecification(KeySet specification, KeySet configKeys, Key changedKey) {
-        Key correspondingSpecKey = specification.lookup(changedKey.getName().replace(configPath, specPath));
-        changedKey.copyAllMeta(correspondingSpecKey);
+        Key correspondingSpecKey = specification.lookup(changedKey.getName().replace(injectionConfiguration.getInjectPath(), injectionConfiguration.getSpecPath()).toLowerCase());
+        Key correspondingConfigKey = configKeys.lookup(changedKey.getName().replace(injectionConfiguration.getInjectPath(), injectionConfiguration.getParentPath()));
+        correspondingConfigKey.copyAllMeta(correspondingSpecKey);
         for (Plugin specPlugin : allPlugins) {
             int result = specPlugin.kdbSet(configKeys, errorKey);
             if (result < 1) {

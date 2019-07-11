@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
+import org.libelektra.model.InjectionConfiguration;
 import org.libelektra.model.SpecificationDataResult;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -16,20 +17,30 @@ public class SpecificationEnforcerTest {
     private KeySet specification;
     private KeySet configKeySet;
     private Key changedKey;
+    private Key injectKey;
     private Key specKey;
 
     private final String changedKeyPath = "user/config/test";
     private final String specKeyPath = "user/spec/test";
+    private final String injectKeyPath = "user/inject/test";
 
-    private final String configPath = "user/config";
+    private final String injectPath = "user/inject";
     private final String specPath = "user/spec";
+    private final String parentPath = "user/config";
 
     private SpecificationEnforcer specificationEnforcer;
 
     @Before
     public void setUp() {
-        specificationEnforcer = new SpecificationEnforcer(specPath, configPath);
+        InjectionConfiguration injectionConfiguration =
+                new InjectionConfiguration(true,
+                        "",
+                        parentPath,
+                        specPath,
+                        injectPath);
+        specificationEnforcer = new SpecificationEnforcer(injectionConfiguration);
         changedKey = Key.create(changedKeyPath, "");
+        injectKey = Key.create(injectKeyPath, "");
         specKey = Key.create(specKeyPath, "");
         specification = KeySet.create();
         configKeySet = KeySet.create();
@@ -48,7 +59,7 @@ public class SpecificationEnforcerTest {
         specKey.setMeta("check/enum/#2", "c");
 
         SpecificationDataResult result = specificationEnforcer.checkSpecification(specification, configKeySet,
-                changedKey);
+                injectKey);
 
         assertThat(result.hasDetectedError(), is(true));
         assertThat(result.getPlugin(), is(SpecificationEnforcer.SpecPlugins.TYPE));
@@ -65,7 +76,30 @@ public class SpecificationEnforcerTest {
         specKey.setMeta("check/enum/#2", "c");
 
         SpecificationDataResult result = specificationEnforcer.checkSpecification(specification, configKeySet,
-                changedKey);
+                injectKey);
+
+        assertThat(result.hasDetectedError(), is(false));
+    }
+
+    @Test
+    public void wrongBoolean_shouldFail() {
+        changedKey.setString("n");
+        specKey.setMeta("type", "boolean");
+
+        SpecificationDataResult result = specificationEnforcer.checkSpecification(specification, configKeySet,
+                injectKey);
+
+        assertThat(result.hasDetectedError(), is(true));
+        assertThat(result.getPlugin(), is(SpecificationEnforcer.SpecPlugins.TYPE));
+    }
+
+    @Test
+    public void correctBoolean_shouldFail() {
+        changedKey.setString("no");
+        specKey.setMeta("type", "boolean");
+
+        SpecificationDataResult result = specificationEnforcer.checkSpecification(specification, configKeySet,
+                injectKey);
 
         assertThat(result.hasDetectedError(), is(false));
     }
@@ -78,7 +112,7 @@ public class SpecificationEnforcerTest {
         specKey.setMeta("check/path", "");
 
         SpecificationDataResult result = specificationEnforcer.checkSpecification(specification, configKeySet,
-                changedKey);
+                injectKey);
 
         assertThat(result.hasDetectedError(), is(true));
         assertThat(result.getPlugin(), is(SpecificationEnforcer.SpecPlugins.PATH));
@@ -92,7 +126,7 @@ public class SpecificationEnforcerTest {
         specKey.setMeta("check/path", "");
 
         SpecificationDataResult result = specificationEnforcer.checkSpecification(specification, configKeySet,
-                changedKey);
+                injectKey);
 
         assertThat(result.hasDetectedError(), is(false));
     }
@@ -104,7 +138,7 @@ public class SpecificationEnforcerTest {
         specKey.setMeta("check/port", "");
 
         SpecificationDataResult result = specificationEnforcer.checkSpecification(specification, configKeySet,
-                changedKey);
+                injectKey);
 
         assertThat(result.hasDetectedError(), is(true));
         assertThat(result.getPlugin(), is(SpecificationEnforcer.SpecPlugins.NETWORK));
@@ -117,7 +151,7 @@ public class SpecificationEnforcerTest {
         specKey.setMeta("check/port", "");
 
         SpecificationDataResult result = specificationEnforcer.checkSpecification(specification, configKeySet,
-                changedKey);
+                injectKey);
 
         assertThat(result.hasDetectedError(), is(false));
     }
@@ -129,7 +163,7 @@ public class SpecificationEnforcerTest {
         specKey.setMeta("check/range", "0-100");
 
         SpecificationDataResult result = specificationEnforcer.checkSpecification(specification, configKeySet,
-                changedKey);
+                injectKey);
 
         assertThat(result.hasDetectedError(), is(true));
         assertThat(result.getPlugin(), is(SpecificationEnforcer.SpecPlugins.RANGE));
@@ -142,7 +176,7 @@ public class SpecificationEnforcerTest {
         specKey.setMeta("check/range", "0-100");
 
         SpecificationDataResult result = specificationEnforcer.checkSpecification(specification, configKeySet,
-                changedKey);
+                injectKey);
 
         assertThat(result.hasDetectedError(), is(false));
     }
@@ -156,7 +190,7 @@ public class SpecificationEnforcerTest {
         specKey.setMeta("check/validation/message", "Not a valid size declaration. Examples: 20x4, 19x3, 40x150");
 
         SpecificationDataResult result = specificationEnforcer.checkSpecification(specification, configKeySet,
-                changedKey);
+                injectKey);
 
         assertThat(result.hasDetectedError(), is(true));
         assertThat(result.getPlugin(), is(SpecificationEnforcer.SpecPlugins.VALIDATION));
@@ -165,13 +199,13 @@ public class SpecificationEnforcerTest {
 
     @Test
     public void correctRegex_shouldNotFail() {
-        changedKey.setString("20*3");
+        changedKey.setString("20x3");
         specKey.setMeta("check/validation", "([1-9]+[0-9]*)x([1-9]+[0-9]*)");
         specKey.setMeta("check/validation/match", "LINE");
         specKey.setMeta("check/validation/message", "Not a valid size declaration. Examples: 20x4, 19x3, 40x150");
 
         SpecificationDataResult result = specificationEnforcer.checkSpecification(specification, configKeySet,
-                changedKey);
+                injectKey);
 
         assertThat(result.hasDetectedError(), is(false));
     }

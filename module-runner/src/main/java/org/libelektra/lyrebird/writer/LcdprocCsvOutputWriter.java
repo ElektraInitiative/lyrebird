@@ -27,7 +27,9 @@ public class LcdprocCsvOutputWriter {
                 .withHeader(HEADERS))) {
             for (LogEntry logEntry : result) {
                 printer.printRecord(
-                        logEntry.getInjectionDataResult().getInjectionMeta().getCategory(),
+                        logEntry.getInjectionDataResult()
+                                .getInjectionMeta()
+                                .getCategory(),
                         logEntry.getInjectionDataResult().getInjectionMeta().getMetadata(),
                         logEntry.getInjectionDataResult().getKey(),
                         logEntry.getLogMessage(),

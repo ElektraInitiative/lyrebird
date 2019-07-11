@@ -2,9 +2,9 @@ package org.libelektra.lyrebird.runner.impl;
 
 import org.apache.commons.io.FileUtils;
 import org.libelektra.*;
-import org.libelektra.lyrebird.model.InjectionConfiguration;
 import org.libelektra.lyrebird.model.LogEntry;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
+import org.libelektra.model.InjectionConfiguration;
 import org.libelektra.model.InjectionDataResult;
 import org.libelektra.model.InjectionResult;
 import org.libelektra.model.SpecificationDataResult;
@@ -38,7 +38,6 @@ public class LCDprocRunner implements ApplicationRunner {
     private Process process;
     private final InjectionPlugin injectionPlugin;
 
-    private InjectionDataResult injectionDataResult;
     private SpecificationDataResult specificationDataResult;
 
     public final static String LCDSERVER_RUN_CONFIG = "lcdproc/LCDd-run.ini";
@@ -112,7 +111,6 @@ public class LCDprocRunner implements ApplicationRunner {
         String path = injectKey.getName().replace(injectionConfiguration.getInjectPath(), injectionConfiguration.getParentPath());
         KeySet configKeySet = kdbService.getKeySetBelowPath(injectionConfiguration.getParentPath());
         InjectionDataResult injectionDataResult = injectionPlugin.kdbSet(configKeySet, injectKey, path);
-        this.injectionDataResult = injectionDataResult;
         currentLogEntry.setInjectionDataResult(injectionDataResult);
         if (injectionConfiguration.isWithSpecification()) {
             this.specificationDataResult = specificationEnforcer.checkSpecification(specificationKeySet,
@@ -164,6 +162,7 @@ public class LCDprocRunner implements ApplicationRunner {
             FileUtils.copyFile(initialConfigFile, runConfig);
             Util.executeCommand(String.format("kdb mount %s %s ini", injectionConfiguration.getTmpRunConfig(), injectionConfiguration.getParentPath()));
             kdbService.initKDB();
+            this.currentLogEntry = new LogEntry();
         } catch (NullPointerException e) {
             LOG.error("Could not find configuration for {}", LCDSERVER_RUN_CONFIG);
         }
@@ -189,7 +188,6 @@ public class LCDprocRunner implements ApplicationRunner {
                 }
             }
 
-            currentLogEntry = new LogEntry();
             if (!errorStarts) {
                 errorMessages = allMessages;
             }

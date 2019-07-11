@@ -105,7 +105,6 @@ public class KeySet implements Iterable<Key> {
 		return create(alloc, keys);
 	}
 
-
 	/**
 	 * Clean-up method to release keyset reference
 	 */

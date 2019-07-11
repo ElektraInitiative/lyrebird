@@ -1,4 +1,4 @@
-package org.libelektra.lyrebird.model;
+package org.libelektra.model;
 
 
 import org.springframework.beans.factory.annotation.Value;

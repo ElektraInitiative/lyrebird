@@ -1,16 +1,11 @@
 package org.libelektra.lyrebird;
 
-import org.libelektra.KDB;
-import org.libelektra.Key;
 import org.libelektra.KeySet;
-import org.libelektra.Plugin;
 import org.libelektra.lyrebird.model.LogEntry;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
 import org.libelektra.lyrebird.writer.LcdprocCsvOutputWriter;
 import org.libelektra.model.InjectionResult;
-import org.libelektra.service.KDBService;
 import org.libelektra.service.ManualInjectionService;
-import org.libelektra.service.SpecificationEnforcer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +29,6 @@ public class Main implements CommandLineRunner {
     private final static Logger LOG = LoggerFactory.getLogger(Main.class);
 
     private final ApplicationRunner runner;
-    private final KDBService kdbService;
     private Collection<LogEntry> allLogs;
     private final LcdprocCsvOutputWriter outputWriter;
     private ManualInjectionService manualInjectionService;
@@ -52,7 +46,6 @@ public class Main implements CommandLineRunner {
 
     @Autowired
     public Main(ApplicationRunner runner,
-                KDBService kdbService,
                 @Value("${injection.iterations}") int iterations,
                 @Value("${injection.timeout}") int timeout,
                 @Value("${special.injections}") String specialInjections,
@@ -62,12 +55,11 @@ public class Main implements CommandLineRunner {
         this.timeout = timeout;
         this.specialInjections = specialInjections;
         this.runner = runner;
-        this.kdbService = kdbService;
         this.iterations = iterations;
         this.env = env;
         this.outputWriter = outputWriter;
         allLogs = new ArrayList<>();
-        manualInjectionService.ifPresent(service -> {this.manualInjectionService = service;});
+        manualInjectionService.ifPresent(service -> this.manualInjectionService = service);
     }
 
     @Override
@@ -97,10 +89,8 @@ public class Main implements CommandLineRunner {
         outputWriter.write(allLogs);
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        LOG.info("STARTING THE APPLICATION");
+    public static void main(String[] args) {
         SpringApplication.run(Main.class, args);
-        LOG.info("APPLICATION FINISHED");
 
 //        CassandraRunner.startClusterIfNotUp();
 //        ApplicationRunner runner = new CassandraRunner();
@@ -137,29 +127,6 @@ public class Main implements CommandLineRunner {
         Thread.sleep(timeout);
     }
 
-    public static void mmain(String[] args) {
-        mainRun();
-    }
-
-    private static void mainRun() {
-        Key key = Key.create("user/enumtest");
-        KeySet set = KeySet.create();
-        try (KDB kdb = KDB.open(key)) {
-            kdb.get(set, key);
-            setUpEnumTst(set);
-
-            KeySet.printKeySet(set);
-            Plugin plugin = new Plugin(SpecificationEnforcer.SpecPlugins.TYPE.getPluginName(), key);
-            int resultCode = plugin.kdbSet(set, key);
-            logResult(resultCode);
-
-            KeySet.printKeySet(set);
-            Key.printKeyAndMeta(key);
-        } catch (KDB.KDBException e) {
-            e.printStackTrace();
-        }
-    }
-
     public static KeySet getKeySetBelow(String startKey, KeySet set) {
         KeySet result = KeySet.create();
         for (int i = 0; i < set.length(); i++) {  //Traverse the set
@@ -168,23 +135,5 @@ public class Main implements CommandLineRunner {
             }
         }
         return result;
-    }
-
-    public static void setUpEnumTst(KeySet set) throws KDB.KDBException {
-        Key k = Key.create("user/enumtest/test", "c");
-        k.setMeta("type", "enum");
-        k.setMeta("check/enum", "#2");
-        k.setMeta("check/enum/#0", "a");
-        k.setMeta("check/enum/#1", "b");
-        k.setMeta("check/enum/#2", "c");
-        set.append(k);
-    }
-
-    private static void logResult(int returncode) {
-        if (returncode < 0) {
-            LOG.error("Returned Error Code: {}", returncode);
-        } else {
-            LOG.info("Returned Error Code: {}", returncode);
-        }
     }
 }
