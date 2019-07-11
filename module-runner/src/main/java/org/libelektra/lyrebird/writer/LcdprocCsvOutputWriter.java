@@ -14,7 +14,7 @@ import java.util.Collection;
 public class LcdprocCsvOutputWriter {
 
     private final String outputPath;
-    String[] HEADERS = {"ErrorType", "InjectionType", "Key", "Log Message", "Old Value", "New Value", "Error Message"};
+    String[] HEADERS = {"ErrorType", "InjectionType", "Key", "Log Message", "Old Value", "New Value", "Error Message", "Type"};
 
 
     public LcdprocCsvOutputWriter(@Value("${outputpath}") String outputPath) {
@@ -33,7 +33,8 @@ public class LcdprocCsvOutputWriter {
                         logEntry.getLogMessage(),
                         logEntry.getInjectionDataResult().getOldValue(),
                         logEntry.getInjectionDataResult().getNewValue(),
-                        logEntry.getErrorLogEntry()
+                        logEntry.getErrorLogEntry(),
+                        logEntry.getResultType()
                 );
             }
         }

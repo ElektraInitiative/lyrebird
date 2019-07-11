@@ -11,7 +11,7 @@ public class RandomizerService {
     private Random randomizer;
     public static final String SEED_META ="inject/rand/seed";
 
-    public RandomizerService(@Value("${randomizer.seed}") Integer initialSeed) {
+    public RandomizerService(@Value("${injection.seed}") Integer initialSeed) {
         randomizer = new Random(initialSeed);
     }
 

@@ -7,8 +7,10 @@ import org.libelektra.Plugin;
 import org.libelektra.lyrebird.model.LogEntry;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
 import org.libelektra.lyrebird.writer.LcdprocCsvOutputWriter;
+import org.libelektra.model.InjectionResult;
 import org.libelektra.service.KDBService;
 import org.libelektra.service.ManualInjectionService;
+import org.libelektra.service.SpecificationEnforcer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +27,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
-
-import static org.libelektra.service.KDBService.ROOT;
 
 @SpringBootApplication(scanBasePackages = "org.libelektra")
 public class Main implements CommandLineRunner {
@@ -79,8 +79,14 @@ public class Main implements CommandLineRunner {
         }
         for (int i = 0; i < iterations; i++) {
             runner.resetConfiguration();
-            boolean successful = runner.injectInConfiguration();
-            if (!successful) {
+            InjectionResult injectionResult = runner.injectInConfiguration();
+            if (injectionResult.errorCaughtBySpecification()) {
+                // No need to run the program if the specification caught the error
+                allLogs.add(runner.getLogEntry());
+                continue;
+            }
+            if (!injectionResult.wasInjectionSuccessful()) {
+                // Case toggling a number for example is impossible and yields false as result
                 i--;
                 continue;
             }
@@ -131,15 +137,19 @@ public class Main implements CommandLineRunner {
         Thread.sleep(timeout);
     }
 
+    public static void mmain(String[] args) {
+        mainRun();
+    }
+
     private static void mainRun() {
-        Key key = Key.create(ROOT);
+        Key key = Key.create("user/enumtest");
         KeySet set = KeySet.create();
         try (KDB kdb = KDB.open(key)) {
             kdb.get(set, key);
-            setUpEnumTst(kdb);
-            kdb.get(set, key);
+            setUpEnumTst(set);
 
-            Plugin plugin = new Plugin(Plugin.SpecPlugins.ENUM.getPluginName(), key);
+            KeySet.printKeySet(set);
+            Plugin plugin = new Plugin(SpecificationEnforcer.SpecPlugins.TYPE.getPluginName(), key);
             int resultCode = plugin.kdbSet(set, key);
             logResult(resultCode);
 
@@ -160,15 +170,14 @@ public class Main implements CommandLineRunner {
         return result;
     }
 
-    public static void setUpEnumTst(KDB kdb) throws KDB.KDBException {
-        Key key = Key.create(ROOT);
-        KeySet set = KeySet.create();
-        kdb.get(set, key);
-//        Key checkEnumMeta = Key.create("check/enum", "a, b, c");
-        Key k = Key.create(ROOT+"/enumtest", "d");
-        k.setMeta("check/enum", "a, b, c");
+    public static void setUpEnumTst(KeySet set) throws KDB.KDBException {
+        Key k = Key.create("user/enumtest/test", "c");
+        k.setMeta("type", "enum");
+        k.setMeta("check/enum", "#2");
+        k.setMeta("check/enum/#0", "a");
+        k.setMeta("check/enum/#1", "b");
+        k.setMeta("check/enum/#2", "c");
         set.append(k);
-        kdb.set(set, key);
     }
 
     private static void logResult(int returncode) {

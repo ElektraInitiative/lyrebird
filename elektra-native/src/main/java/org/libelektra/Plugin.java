@@ -98,27 +98,6 @@ public class Plugin {
         }
     }
 
-    public enum SpecPlugins {
-        PATH("path"),
-        ENUM("enum"),
-        NETWORK("network"),
-        TYPE("type"),
-        CONDITIONALS("conditionals"),
-        VALIDATION("validation"),
-        REFERENCE("reference"),
-        RANGE("range");
-
-        private final String pluginName;
-
-        SpecPlugins(String pluginName) {
-            this.pluginName = pluginName;
-        }
-
-        public String getPluginName() {
-            return pluginName;
-        }
-    }
-
 }
 
 

@@ -1,17 +1,19 @@
 package org.libelektra.lyrebird.runner.impl;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.input.Tailer;
 import org.libelektra.*;
+import org.libelektra.lyrebird.model.InjectionConfiguration;
 import org.libelektra.lyrebird.model.LogEntry;
-import org.libelektra.model.InjectionDataResult;
-import org.libelektra.service.KDBService;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
+import org.libelektra.model.InjectionDataResult;
+import org.libelektra.model.InjectionResult;
+import org.libelektra.model.SpecificationDataResult;
+import org.libelektra.service.KDBService;
 import org.libelektra.service.RandomizerService;
+import org.libelektra.service.SpecificationEnforcer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -21,76 +23,79 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.libelektra.lyrebird.model.LogEntry.RESULT_TYPE.SPECIFICATION_CAUGHT;
+
 @Component
 @Profile("lcdproc")
 public class LCDprocRunner implements ApplicationRunner {
 
     private KDBService kdbService;
+    private RandomizerService randomizerService;
+    private final SpecificationEnforcer specificationEnforcer;
+
     private final static Logger LOG = LoggerFactory.getLogger(LCDprocRunner.class);
 
     private Process process;
-    private RandomizerService randomizerService;
     private final InjectionPlugin injectionPlugin;
+
     private InjectionDataResult injectionDataResult;
-
-    private SysLogListener sysLogListener;
-    private Tailer tailer;
-    private final String LOG_LOCATION = "/var/log/syslog";
-
-    private LogEntry currentLogEntry;
+    private SpecificationDataResult specificationDataResult;
 
     public final static String LCDSERVER_RUN_CONFIG = "lcdproc/LCDd-run.ini";
     public final static String LCDSERVER_INJECT_CONFIG = "lcdproc/LCDd-inject.ini";
+    public final static String LCDSERVER_SPEC_CONFIG = "lcdproc/LCDd-spec.ini";
     public final static String TEMP_ERROR_CONFIG = "/tmp/lcdd-inject.conf";
-    public static String KDB_LCDPROC_PATH;
-    public final static String KDB_LCDPROC_INJECT_PATH = ELEKTRA_NAMESPACE+"/inject/lcdproc";
-
-    private final String tmpRunConfig;
+    public final static String TEMP_SPEC_CONFIG = "/tmp/lcdd-spec.conf";
 
     private KeySet errorConfigKeySet;
+    private KeySet specificationKeySet;
+    private LogEntry currentLogEntry;
+    private final InjectionConfiguration injectionConfiguration;
 
     @Autowired
     public LCDprocRunner(KDBService kdbService,
                          RandomizerService randomizerService,
+                         SpecificationEnforcer specificationEnforcer,
                          InjectionPlugin injectionPlugin,
-                         @Value("${config.mountpoint}") String parentPath,
-                         @Value("${inject.run-config-location}") String tmpRunConfig
+                         InjectionConfiguration injectionConfiguration
     ) throws KDB.KDBException {
-        this.tmpRunConfig = tmpRunConfig;
+        this.injectionConfiguration = injectionConfiguration;
+        this.specificationEnforcer = specificationEnforcer;
         this.injectionPlugin = injectionPlugin;
-        KDB_LCDPROC_PATH = parentPath;
         this.kdbService = kdbService;
         this.randomizerService = randomizerService;
         try {
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             File errorConfigFile = new File(classLoader.getResource(LCDSERVER_INJECT_CONFIG).getFile());
+            File specConfigFile = new File(classLoader.getResource(LCDSERVER_SPEC_CONFIG).getFile());
             //TODO: Filter for settings with numbers
             File runConfig = new File(TEMP_ERROR_CONFIG);
+            File specConfig = new File(TEMP_SPEC_CONFIG);
             FileUtils.copyFile(errorConfigFile, runConfig);
-            Util.executeCommand(String.format("kdb mount %s %s ni", TEMP_ERROR_CONFIG, KDB_LCDPROC_INJECT_PATH));
+            FileUtils.copyFile(specConfigFile, specConfig);
+            currentLogEntry = new LogEntry();
+            Util.executeCommand(String.format("kdb mount %s %s ni", TEMP_ERROR_CONFIG, injectionConfiguration.getInjectPath()));
+            Util.executeCommand(String.format("kdb mount %s %s ni", TEMP_SPEC_CONFIG, injectionConfiguration.getSpecPath()));
         } catch (NullPointerException e) {
             LOG.error("Could not find configuration for {}", LCDSERVER_RUN_CONFIG);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        errorConfigKeySet = kdbService.getKeySetBelowPath(KDB_LCDPROC_INJECT_PATH);
+        kdbService.initKDB();
+        errorConfigKeySet = kdbService.getKeySetBelowPath(injectionConfiguration.getInjectPath());
+        specificationKeySet = kdbService.getKeySetBelowPath(injectionConfiguration.getSpecPath());
     }
 
 
     @Override
     public void start() throws IOException {
-
 //        String[] command = (new String[]{"gnome-terminal", "-e", String.format("LCDd -f -c %s", tmpRunConfig)});
-        String[] command = new String[]{"LCDd", "-f", "-c", tmpRunConfig};
+        String[] command = new String[]{"LCDd", "-f", "-c", injectionConfiguration.getTmpRunConfig()};
 
         process = new ProcessBuilder(command)
                 .start();
 
         handleLogMessage(process);
-
-//        sysLogListener = new SysLogListener();
-//        File file = new File(LOG_LOCATION);
-//        tailer = Tailer.create(file, sysLogListener);
     }
 
     @Override
@@ -101,15 +106,25 @@ public class LCDprocRunner implements ApplicationRunner {
     }
 
     @Override
-    public boolean injectInConfiguration() throws KDB.KDBException {
+    public InjectionResult injectInConfiguration() throws KDB.KDBException {
         int nextRandom = randomizerService.getNextInt(errorConfigKeySet.length());
         Key injectKey = errorConfigKeySet.at(nextRandom);
-        String path = injectKey.getName().replace(KDB_LCDPROC_INJECT_PATH, KDB_LCDPROC_PATH);
-        KeySet configKeySet = kdbService.getKeySetBelowPath(KDB_LCDPROC_PATH);
+        String path = injectKey.getName().replace(injectionConfiguration.getInjectPath(), injectionConfiguration.getParentPath());
+        KeySet configKeySet = kdbService.getKeySetBelowPath(injectionConfiguration.getParentPath());
         InjectionDataResult injectionDataResult = injectionPlugin.kdbSet(configKeySet, injectKey, path);
         this.injectionDataResult = injectionDataResult;
+        currentLogEntry.setInjectionDataResult(injectionDataResult);
+        if (injectionConfiguration.isWithSpecification()) {
+            this.specificationDataResult = specificationEnforcer.checkSpecification(specificationKeySet,
+                    configKeySet, injectKey);
+            currentLogEntry.setSpecificationDataResult(this.specificationDataResult);
+            if (this.specificationDataResult.hasDetectedError()) {
+                currentLogEntry.setErrorLogEntry(this.specificationDataResult.getErrorMessage());
+                currentLogEntry.setResultType(SPECIFICATION_CAUGHT);
+            }
+        }
         injectAdditionalContextDependant(configKeySet, injectionDataResult);
-        return injectionDataResult.isWasInjectionSuccessful();
+        return new InjectionResult(injectionDataResult, specificationDataResult);
     }
 
     // We want to use the concrete driver to force additional error possibility
@@ -119,19 +134,19 @@ public class LCDprocRunner implements ApplicationRunner {
         if (key == null) {
             return;
         }
-        String postInjectPath = key.replace(KDB_LCDPROC_PATH, "");
+        String postInjectPath = key.replace(injectionConfiguration.getParentPath(), "");
         if (postInjectPath.length() <= 1) {
             return;
         }
         String driver = postInjectPath.split("/")[1];
-        if (driver.equals("server")) {
+        if (driver.equals("server") || driver.equals("menu")) {
             return;
         }
 
-        set.append(Key.create(KDB_LCDPROC_PATH + "/server/Driver", driver));
+        set.append(Key.create(injectionConfiguration.getParentPath() + "/server/Driver", driver));
 
         try {
-            kdbService.set(set, KDB_LCDPROC_PATH);
+            kdbService.set(set, injectionConfiguration.getParentPath());
         } catch (KDB.KDBException e) {
             LOG.error("Could not do context dependant injection", e);
         }
@@ -140,16 +155,15 @@ public class LCDprocRunner implements ApplicationRunner {
     @Override
     public void resetConfiguration() throws IOException {
         try {
-            Util.executeCommand(String.format("kdb umount %s", KDB_LCDPROC_PATH));
+            Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getParentPath()));
             kdbService.close();
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             File initialConfigFile = new File(classLoader.getResource(LCDSERVER_RUN_CONFIG).getFile());
-            File runConfig = new File(tmpRunConfig);
+            File runConfig = new File(injectionConfiguration.getTmpRunConfig());
             FileUtils.deleteQuietly(runConfig);
             FileUtils.copyFile(initialConfigFile, runConfig);
-            Util.executeCommand(String.format("kdb mount %s %s ini", tmpRunConfig, KDB_LCDPROC_PATH));
+            Util.executeCommand(String.format("kdb mount %s %s ini", injectionConfiguration.getTmpRunConfig(), injectionConfiguration.getParentPath()));
             kdbService.initKDB();
-            errorConfigKeySet = kdbService.getKeySetBelowPath(KDB_LCDPROC_INJECT_PATH);
         } catch (NullPointerException e) {
             LOG.error("Could not find configuration for {}", LCDSERVER_RUN_CONFIG);
         }
@@ -181,7 +195,6 @@ public class LCDprocRunner implements ApplicationRunner {
             }
             errorMessages = errorMessages.stream().filter(str -> !str.isEmpty()).collect(Collectors.toList());
             currentLogEntry.setLogMessage(String.join("\n", errorMessages));
-            currentLogEntry.setInjectionDataResult(this.injectionDataResult);
             if (errorMessages.size() > 0) {
                 currentLogEntry.setErrorLogEntry(errorMessages.get(0));
             }
@@ -201,7 +214,11 @@ public class LCDprocRunner implements ApplicationRunner {
     @Override
     @PreDestroy
     public void cleanUp() throws IOException {
-        Util.executeCommand(String.format("kdb umount %s", KDB_LCDPROC_PATH));
-        Util.executeCommand(String.format("kdb umount %s", KDB_LCDPROC_INJECT_PATH));
+        Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getParentPath()));
+        Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getInjectPath()));
+        Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getSpecPath()));
+        FileUtils.deleteQuietly(new File(injectionConfiguration.getTmpRunConfig()));
+        FileUtils.deleteQuietly(new File(TEMP_ERROR_CONFIG));
+        FileUtils.deleteQuietly(new File(TEMP_SPEC_CONFIG));
     }
 }

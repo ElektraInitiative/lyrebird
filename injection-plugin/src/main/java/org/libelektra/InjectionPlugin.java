@@ -1,6 +1,6 @@
 package org.libelektra;
 
-import org.libelektra.errortypes.*;
+import org.libelektra.errortypes.AbstractErrorType;
 import org.libelektra.model.InjectionData;
 import org.libelektra.model.InjectionDataResult;
 import org.libelektra.service.KDBService;
@@ -11,10 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
-
-import static java.util.Objects.nonNull;
 
 @Component
 public class InjectionPlugin {
@@ -34,7 +35,7 @@ public class InjectionPlugin {
     public InjectionPlugin(List<AbstractErrorType> errorTypes,
                            RandomizerService randomizerService,
                            KDBService kdbService,
-                           @Value("${config.mountpoint}") String configMountPoint) {
+                           @Value("${mountpoint.config}") String configMountPoint) {
         this.errorTypes = errorTypes;
         this.randomizerService = randomizerService;
         this.kdbService = kdbService;

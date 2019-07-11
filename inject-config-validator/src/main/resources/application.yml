@@ -4,4 +4,4 @@ logging:
     org.libelektra: DEBUG
 
 randomizer.seed: 17
-config.mountpoint: "system/lcdproc"
+mountpoint.config: "system/lcdproc"

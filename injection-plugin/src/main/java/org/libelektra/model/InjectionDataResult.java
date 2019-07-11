@@ -25,7 +25,7 @@ public class InjectionDataResult {
         this.injectionMeta = injectionDataResult.injectionMeta;
     }
 
-    public boolean isWasInjectionSuccessful() {
+    public boolean wasInjectionSuccessful() {
         return wasInjectionSuccessful;
     }
 

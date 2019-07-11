@@ -2,18 +2,23 @@ logging:
   level:
     root: ERROR
     org.libelektra: INFO
+#    org.libelektra.KeySet: DEBUG
+#    org.libelektra.Key: DEBUG
     org.libelektra.errortypes: INFO
 
-
-randomizer.seed: 19
-config.mountpoint: "system/lcdproc"
-special.injections: "special-configurations/lcdproc"
+mountpoint:
+    config: "system/lcdproc"
+    specification: "system/spec"
+    inject: "system/inject"
 
 injection:
-  iterations: 3
+  iterations: 10
   run-config-location: "/tmp/lcdd-tmp.conf"
   timeout: 300
+  with-specification: true
+  seed: 19
 
+special.injections: "special-configurations/lcdproc"
 outputpath: "/home/wespe/Desktop"
 
 spring:

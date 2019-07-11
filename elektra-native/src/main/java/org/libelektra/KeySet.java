@@ -1,11 +1,11 @@
 package org.libelektra;
 
-import java.util.Arrays;
-import java.util.Iterator;
-
 import com.sun.jna.Pointer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
+import java.util.Iterator;
 
 import static org.libelektra.Key.printKeyAndMeta;
 
@@ -104,6 +104,7 @@ public class KeySet implements Iterable<Key> {
 		keys[args.length] = KS_END;
 		return create(alloc, keys);
 	}
+
 
 	/**
 	 * Clean-up method to release keyset reference

@@ -3,7 +3,6 @@ package org.libelektra.errortypes;
 import org.libelektra.InjectionMeta;
 import org.libelektra.Key;
 import org.libelektra.KeySet;
-
 import org.libelektra.model.InjectionData;
 import org.libelektra.model.InjectionDataResult;
 import org.libelektra.service.RandomizerService;
@@ -30,7 +29,7 @@ public class StructureError extends AbstractErrorType{
 
     @Autowired
     public StructureError(
-            @Value("${config.mountpoint}") String parentPath,
+            @Value("${mountpoint.config}") String parentPath,
             RandomizerService randomizerService) {
         super(randomizerService);
         this.parentPath = parentPath;

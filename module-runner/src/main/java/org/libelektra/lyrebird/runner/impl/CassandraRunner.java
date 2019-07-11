@@ -3,13 +3,17 @@ package org.libelektra.lyrebird.runner.impl;
 import org.apache.commons.io.input.Tailer;
 import org.libelektra.lyrebird.model.LogEntry;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
+import org.libelektra.lyrebird.service.LogListenerService;
+import org.libelektra.model.InjectionResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -31,7 +35,7 @@ public class CassandraRunner implements ApplicationRunner {
 
 
     private Tailer tailer;
-    private LogListener tailerListener;
+    private LogListenerService tailerListener;
     private LogEntry currentLogEntry;
 
     public static void startClusterIfNotUp() throws IOException, InterruptedException {
@@ -77,7 +81,7 @@ public class CassandraRunner implements ApplicationRunner {
         Process process = new ProcessBuilder(command)
                 .redirectErrorStream(true)
                 .start();
-        tailerListener = new LogListener();
+        tailerListener = new LogListenerService();
         File file = new File(LOG_LOCATION);
         tailer = Tailer.create(file, tailerListener);
         if (process.waitFor(10, TimeUnit.SECONDS)) {
@@ -99,8 +103,8 @@ public class CassandraRunner implements ApplicationRunner {
     }
 
     @Override
-    public boolean injectInConfiguration() {
-        return true;
+    public InjectionResult injectInConfiguration() {
+        return new InjectionResult(null, null);
     }
 
     @Override
