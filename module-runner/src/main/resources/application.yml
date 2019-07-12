@@ -12,7 +12,7 @@ mountpoint:
     inject: "system/inject"
 
 injection:
-  iterations: 10
+  iterations: 150
   run-config-location: "/tmp/lcdd-tmp.conf"
   timeout: 300
   with-specification: true

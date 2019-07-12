@@ -6,6 +6,8 @@ import org.libelektra.KeySet;
 import org.libelektra.Plugin;
 import org.libelektra.model.InjectionConfiguration;
 import org.libelektra.model.SpecificationDataResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,9 +18,11 @@ import java.util.List;
 @Component
 public class SpecificationEnforcer {
 
+    private final static Logger LOG = LoggerFactory.getLogger(SpecificationEnforcer.class);
+
     private final InjectionConfiguration injectionConfiguration;
     private final List<Plugin> allPlugins;
-    private final Key errorKey = Key.create("user/error");
+    private Key errorKey = Key.create("user/error");
 
     @Autowired
     public SpecificationEnforcer(
@@ -33,13 +37,21 @@ public class SpecificationEnforcer {
 
     public SpecificationDataResult checkSpecification(KeySet specification, KeySet configKeys, Key changedKey) {
         Key correspondingSpecKey = specification.lookup(changedKey.getName().replace(injectionConfiguration.getInjectPath(), injectionConfiguration.getSpecPath()).toLowerCase());
-        Key correspondingConfigKey = configKeys.lookup(changedKey.getName().replace(injectionConfiguration.getInjectPath(), injectionConfiguration.getParentPath()));
+        Key correspondingConfigKey = configKeys.lookup(changedKey.getName().replace(injectionConfiguration.getInjectPath(), injectionConfiguration.getParentPath())).dup();
         correspondingConfigKey.copyAllMeta(correspondingSpecKey);
         for (Plugin specPlugin : allPlugins) {
-            int result = specPlugin.kdbSet(configKeys, errorKey);
+            // Bug in Elektra?
+            KeySet tmpKeySet = KeySet.create();
+            tmpKeySet.append(correspondingConfigKey);
+            int result = specPlugin.kdbSet(tmpKeySet, errorKey);
             if (result < 1) {
+                String error = errorKey.getMeta("error/reason").getString();
+                List<String> warnings = extractWarnings();
+                LOG.info("(Specification caught - {})", specPlugin.getName());
+                errorKey.release();
+                errorKey = Key.create("user/error");
                 return SpecificationDataResult.detectionResult(SpecPlugins.valueOf(specPlugin.getName().toUpperCase()),
-                        errorKey.getMeta("error/reason").getString(), extractWarnings());
+                        error, warnings);
             }
         }
 

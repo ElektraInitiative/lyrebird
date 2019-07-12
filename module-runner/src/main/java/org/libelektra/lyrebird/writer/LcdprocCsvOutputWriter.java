@@ -14,11 +14,16 @@ import java.util.Collection;
 public class LcdprocCsvOutputWriter {
 
     private final String outputPath;
+    private final boolean withSpecification;
+
     String[] HEADERS = {"ErrorType", "InjectionType", "Key", "Log Message", "Old Value", "New Value", "Error Message", "Type"};
 
 
-    public LcdprocCsvOutputWriter(@Value("${outputpath}") String outputPath) {
+    public LcdprocCsvOutputWriter(
+            @Value("${injection.with-specification}") boolean withSpecification,
+            @Value("${outputpath}") String outputPath) {
         this.outputPath = outputPath;
+        this.withSpecification = withSpecification;
     }
 
     public void write(Collection<LogEntry> result) throws IOException {
@@ -26,6 +31,10 @@ public class LcdprocCsvOutputWriter {
         try (CSVPrinter printer = new CSVPrinter(out, CSVFormat.DEFAULT
                 .withHeader(HEADERS))) {
             for (LogEntry logEntry : result) {
+                String errorLogEntry = logEntry.getErrorLogEntry();
+                if (withSpecification && errorLogEntry!=null && errorLogEntry.equals("(null)")) {
+                    errorLogEntry = String.join("\n", logEntry.getSpecificationDataResult().getWarnings());
+                }
                 printer.printRecord(
                         logEntry.getInjectionDataResult()
                                 .getInjectionMeta()
@@ -35,7 +44,7 @@ public class LcdprocCsvOutputWriter {
                         logEntry.getLogMessage(),
                         logEntry.getInjectionDataResult().getOldValue(),
                         logEntry.getInjectionDataResult().getNewValue(),
-                        logEntry.getErrorLogEntry(),
+                        errorLogEntry,
                         logEntry.getResultType()
                 );
             }
