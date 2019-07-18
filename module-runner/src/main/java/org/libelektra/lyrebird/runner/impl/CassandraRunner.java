@@ -24,7 +24,7 @@ public class CassandraRunner implements ApplicationRunner {
     private final static Logger LOG = LoggerFactory.getLogger(CassandraRunner.class);
 
     private static final String USER = "wespe";
-    private static final String CASSANDRA_VERSION = "3.11.2";
+    private static final String CASSANDRA_VERSION = "3.11.4";
     private static final int CASSANDRA_NODES = 3;
     private static final String CLUSTER_NAME = "MyCluster";
     private static final String TEST_NODE = "node1";
