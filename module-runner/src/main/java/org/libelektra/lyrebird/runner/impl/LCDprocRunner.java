@@ -36,9 +36,9 @@ public class LCDprocRunner implements ApplicationRunner {
     private final static Logger LOG = LoggerFactory.getLogger(LCDprocRunner.class);
 
     private Process process;
-    private final InjectionPlugin injectionPlugin;
 
     private SpecificationDataResult specificationDataResult;
+    private LogEntry currentLogEntry;
 
     public final static String LCDSERVER_RUN_CONFIG = "lcdproc/LCDd-run.ini";
     public final static String LCDSERVER_INJECT_CONFIG = "lcdproc/LCDd-inject.ini";
@@ -46,9 +46,9 @@ public class LCDprocRunner implements ApplicationRunner {
     public final static String TEMP_ERROR_CONFIG = "/tmp/lcdd-inject.conf";
     public final static String TEMP_SPEC_CONFIG = "/tmp/lcdd-spec.conf";
 
+    private final InjectionPlugin injectionPlugin;
     private KeySet errorConfigKeySet;
     private KeySet specificationKeySet;
-    private LogEntry currentLogEntry;
     private final InjectionConfiguration injectionConfiguration;
 
     @Autowired
