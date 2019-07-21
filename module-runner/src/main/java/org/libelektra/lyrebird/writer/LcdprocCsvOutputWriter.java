@@ -14,26 +14,25 @@ import java.util.Collection;
 public class LcdprocCsvOutputWriter {
 
     private final String outputPath;
-    private final boolean withSpecification;
 
-    String[] HEADERS = {"ErrorType", "InjectionType", "Key", "Log Message", "Old Value", "New Value", "Error Message", "Type"};
-
+    String[] HEADERS = {"ErrorType", "InjectionType", "Key", "SpecCaught", "Old Value", "New Value", "Error Message", "SpecMessage", "Log Message", "Type"};
 
     public LcdprocCsvOutputWriter(
-            @Value("${injection.with-specification}") boolean withSpecification,
             @Value("${outputpath}") String outputPath) {
         this.outputPath = outputPath;
-        this.withSpecification = withSpecification;
     }
 
     public void write(Collection<LogEntry> result) throws IOException {
-        FileWriter out = new FileWriter(outputPath + "/lcdproc.csv");
+        FileWriter out = new FileWriter(outputPath + "/lyrebird.csv");
         try (CSVPrinter printer = new CSVPrinter(out, CSVFormat.DEFAULT
                 .withHeader(HEADERS))) {
             for (LogEntry logEntry : result) {
-                String errorLogEntry = logEntry.getErrorLogEntry();
-                if (withSpecification && errorLogEntry!=null && errorLogEntry.equals("(null)")) {
-                    errorLogEntry = String.join("\n", logEntry.getSpecificationDataResult().getWarnings());
+                String specificationErrorLogEntry = "";
+                if (logEntry.getSpecificationDataResult().hasDetectedError()) {
+                    specificationErrorLogEntry = logEntry.getSpecificationDataResult().getErrorMessage();
+                    if (specificationErrorLogEntry!=null && specificationErrorLogEntry.equals("(null)")) {
+                        specificationErrorLogEntry = String.join("\n", logEntry.getSpecificationDataResult().getWarnings());
+                    }
                 }
                 printer.printRecord(
                         logEntry.getInjectionDataResult()
@@ -41,10 +40,12 @@ public class LcdprocCsvOutputWriter {
                                 .getCategory(),
                         logEntry.getInjectionDataResult().getInjectionMeta().getMetadata(),
                         logEntry.getInjectionDataResult().getKey(),
-                        logEntry.getLogMessage(),
+                        logEntry.getSpecificationDataResult().hasDetectedError() ? "X" : "",
                         logEntry.getInjectionDataResult().getOldValue(),
                         logEntry.getInjectionDataResult().getNewValue(),
-                        errorLogEntry,
+                        logEntry.getErrorLogEntry(),
+                        specificationErrorLogEntry,
+                        logEntry.getLogMessage(),
                         logEntry.getResultType()
                 );
             }

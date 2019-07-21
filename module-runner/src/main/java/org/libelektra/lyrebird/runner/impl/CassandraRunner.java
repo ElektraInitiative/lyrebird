@@ -1,6 +1,7 @@
 package org.libelektra.lyrebird.runner.impl;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.Tailer;
 import org.libelektra.*;
 import org.libelektra.lyrebird.model.LogEntry;
@@ -20,13 +21,11 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static org.libelektra.lyrebird.model.LogEntry.RESULT_TYPE.SPECIFICATION_CAUGHT;
 
 @Component
 @Profile("cassandra")
@@ -40,7 +39,7 @@ public class CassandraRunner implements ApplicationRunner {
     private static final String CLUSTER_NAME = "LyreBirdCluster";
     private static final String TEST_NODE = "node1";
     private static final String LOG_LOCATION =
-            String.format("/home/%s/.ccm/%s/node1/logs/system.log", USER, CLUSTER_NAME);
+            String.format("/home/%s/.ccm/%s/%s/logs/system.log", USER, TEST_NODE, CLUSTER_NAME);
 
     private KDBService kdbService;
     private RandomizerService randomizerService;
@@ -55,36 +54,44 @@ public class CassandraRunner implements ApplicationRunner {
     public final static String CASSANDRA_RUN_CONFIG = "cassandra/cassandra.yaml";
     public final static String CASSANDRA_INJECT_CONFIG = "cassandra/cassandra-inject.ini";
     public final static String CASSANDRA_SPEC_CONFIG = "cassandra/cassandra-spec.ini";
-    public final static String TEMP_ERROR_CONFIG = String.format("/home/%s/.ccm/%s/node1/conf/cassandra.yaml", USER, CLUSTER_NAME);
+    public final static String NODE1_RUN_CONFIG = String.format("/home/%s/.ccm/%s/%s/conf/cassandra.yaml", USER
+            , CLUSTER_NAME, TEST_NODE);
     public final static String TEMP_SPEC_CONFIG = "/tmp/cassandra-spec.conf";
+    public final static String TEMP_ERROR_CONFIG = "/tmp/lcdd-inject.conf";
 
     private Tailer tailer;
     private LogListenerService tailerListener;
+    private File initialConfigFileCopy;
 
     @Autowired
     public CassandraRunner(KDBService kdbService,
-                         RandomizerService randomizerService,
-                         SpecificationEnforcer specificationEnforcer,
-                         InjectionPlugin injectionPlugin,
-                         InjectionConfiguration injectionConfiguration
-    ) throws KDB.KDBException {
+                           RandomizerService randomizerService,
+                           SpecificationEnforcer specificationEnforcer,
+                           InjectionPlugin injectionPlugin,
+                           InjectionConfiguration injectionConfiguration
+    ) throws KDB.KDBException, InterruptedException {
         this.injectionConfiguration = injectionConfiguration;
         this.specificationEnforcer = specificationEnforcer;
         this.injectionPlugin = injectionPlugin;
         this.kdbService = kdbService;
         this.randomizerService = randomizerService;
         try {
+            startClusterIfNotUp();
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             File errorConfigFile = new File(classLoader.getResource(CASSANDRA_INJECT_CONFIG).getFile());
             File specConfigFile = new File(classLoader.getResource(CASSANDRA_SPEC_CONFIG).getFile());
             //TODO: Filter for settings with numbers
-            File runConfig = new File(TEMP_ERROR_CONFIG);
+            File runConfig = new File(NODE1_RUN_CONFIG);
+            initialConfigFileCopy = new File("/tmp/cassandra-run-copy.yml");
+            FileUtils.copyFile(runConfig, initialConfigFileCopy);
             File specConfig = new File(TEMP_SPEC_CONFIG);
-            FileUtils.copyFile(errorConfigFile, runConfig);
+            FileUtils.copyFile(errorConfigFile, new File(TEMP_ERROR_CONFIG));
             FileUtils.copyFile(specConfigFile, specConfig);
             currentLogEntry = new LogEntry();
-            Util.executeCommand(String.format("kdb mount %s %s ni", TEMP_ERROR_CONFIG, injectionConfiguration.getInjectPath()));
-            Util.executeCommand(String.format("kdb mount %s %s ni", TEMP_SPEC_CONFIG, injectionConfiguration.getSpecPath()));
+            Util.executeCommand(String.format("kdb mount %s %s ni", TEMP_ERROR_CONFIG,
+                    injectionConfiguration.getInjectPath()));
+            Util.executeCommand(String.format("kdb mount %s %s ni", TEMP_SPEC_CONFIG,
+                    injectionConfiguration.getSpecPath()));
         } catch (NullPointerException e) {
             LOG.error("Could not find configuration for {}", CASSANDRA_RUN_CONFIG);
         } catch (IOException e) {
@@ -95,45 +102,9 @@ public class CassandraRunner implements ApplicationRunner {
         specificationKeySet = kdbService.getKeySetBelowPath(injectionConfiguration.getSpecPath());
     }
 
-    public static void startClusterIfNotUp() throws IOException, InterruptedException {
-
-        String[] isUpCommand = new String[]{"su", USER, "-c", "ccm status"};
-        Process process = new ProcessBuilder(isUpCommand)
-                .redirectErrorStream(true)
-                .start();
-
-        List<String> output = new ArrayList<>();
-        String line;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            while ((line = reader.readLine()) != null) {
-                output.add(line);
-            }
-        }
-
-        boolean isUp = output.stream().anyMatch(str -> str.equals("node2: UP")); //Node 1 can be down as it is our testnode
-        if (isUp) {
-            LOG.info("Cassandra Cluster is already up and working");
-        } else {
-            LOG.info("Starting Cassandra Cluster with name {} as user {}", CLUSTER_NAME, USER);
-            String ccmStartCommand = String.format("ccm create %s -v %s -n %d -s",
-                    CLUSTER_NAME, CASSANDRA_VERSION, CASSANDRA_NODES);
-            String[] command = new String[]{"su", USER, "-c", ccmStartCommand};
-            Process p = new ProcessBuilder(command)
-                    .redirectErrorStream(true)
-                    .start();
-            int result = p.waitFor();
-            LOG.info("Started cluster. Process return [{}]", result);
-        }
-
-        //Stop node1
-        stopTestNode();
-        LOG.debug("Stopping {} to start testing", TEST_NODE);
-    }
-
     @Override
-    public void start() throws IOException, InterruptedException {
-        String ccmStartCommand = String.format("ccm %s start", TEST_NODE);
-        String[] command = new String[]{"su", USER, "-c", ccmStartCommand};
+    public void start() throws IOException {
+        String[] command = new String[]{"ccm", TEST_NODE, "start"};
         LOG.debug("Starting {}", TEST_NODE);
         Process process = new ProcessBuilder(command)
                 .redirectErrorStream(true)
@@ -141,9 +112,6 @@ public class CassandraRunner implements ApplicationRunner {
         tailerListener = new LogListenerService();
         File file = new File(LOG_LOCATION);
         tailer = Tailer.create(file, tailerListener);
-        if (process.waitFor(10, TimeUnit.SECONDS)) {
-            LOG.error("Process did not stop!");
-        }
     }
 
     @Override
@@ -151,38 +119,45 @@ public class CassandraRunner implements ApplicationRunner {
         stopTestNode();
         tailer.stop();
         handleLogs(tailerListener.getLogsAndReset());
-
-        //Clear logging for new run
-        File file = new File(LOG_LOCATION);
-        try(PrintWriter writer = new PrintWriter(file)) {
-            writer.print("");
-        }
     }
 
     @Override
     public InjectionResult injectInConfiguration() throws KDB.KDBException {
         int nextRandom = randomizerService.getNextInt(errorConfigKeySet.length());
         Key injectKey = errorConfigKeySet.at(nextRandom);
-        String path = injectKey.getName().replace(injectionConfiguration.getInjectPath(), injectionConfiguration.getParentPath());
+        String path = injectKey.getName().replace(injectionConfiguration.getInjectPath(),
+                injectionConfiguration.getParentPath());
         KeySet configKeySet = kdbService.getKeySetBelowPath(injectionConfiguration.getParentPath());
         InjectionDataResult injectionDataResult = injectionPlugin.kdbSet(configKeySet, injectKey, path);
         currentLogEntry.setInjectionDataResult(injectionDataResult);
-        if (injectionConfiguration.isWithSpecification()) {
-            this.specificationDataResult = specificationEnforcer.checkSpecification(specificationKeySet,
-                    configKeySet, injectKey);
-            currentLogEntry.setSpecificationDataResult(this.specificationDataResult);
-            if (this.specificationDataResult.hasDetectedError()) {
-                currentLogEntry.setErrorLogEntry(this.specificationDataResult.getErrorMessage());
-                currentLogEntry.setResultType(SPECIFICATION_CAUGHT);
-            }
-        }
+        this.specificationDataResult = specificationEnforcer.checkSpecification(specificationKeySet,
+                configKeySet, injectKey);
+        currentLogEntry.setSpecificationDataResult(this.specificationDataResult);
         injectAdditionalContextDependant(configKeySet, injectionDataResult);
         return new InjectionResult(injectionDataResult, specificationDataResult);
     }
 
     @Override
-    public void resetConfiguration() {
-
+    public void resetConfiguration() throws IOException {
+        try {
+            //Clear logging for new run
+            File file = new File(LOG_LOCATION);
+            try (PrintWriter writer = new PrintWriter(file)) {
+                writer.print("");
+            }
+            Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getParentPath()));
+            kdbService.close();
+            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+            File initialConfigFile = new File(classLoader.getResource(NODE1_RUN_CONFIG).getFile());
+            File runConfig = new File(injectionConfiguration.getTmpRunConfig());
+            FileUtils.deleteQuietly(runConfig);
+            FileUtils.copyFile(initialConfigFile, runConfig);
+            Util.executeCommand(String.format("kdb mount %s %s ini", injectionConfiguration.getTmpRunConfig(), injectionConfiguration.getParentPath()));
+            kdbService.initKDB();
+            this.currentLogEntry = new LogEntry();
+        } catch (NullPointerException e) {
+            LOG.error("Could not find configuration for {}", CASSANDRA_RUN_CONFIG);
+        }
     }
 
     @Override
@@ -206,16 +181,36 @@ public class CassandraRunner implements ApplicationRunner {
 
     @Override
     public void cleanUp() throws IOException {
+        Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getParentPath()));
+        Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getInjectPath()));
+        Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getSpecPath()));
 
+        //Set old config file and delete saved copy
+        FileUtils.copyFile(initialConfigFileCopy, new File(NODE1_RUN_CONFIG));
+        FileUtils.deleteQuietly(initialConfigFileCopy);
+
+        FileUtils.deleteQuietly(new File(TEMP_SPEC_CONFIG));
+
+        FileUtils.deleteQuietly(new File(injectionConfiguration.getTmpRunConfig()));
     }
 
-    private static void stopTestNode() throws IOException, InterruptedException {
+    private void startClusterIfNotUp() throws IOException, InterruptedException {
+        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+        File startScript = new File(classLoader.getResource("cassandra/startCluster.sh").getFile());
+        ProcessBuilder bash = new ProcessBuilder();
+        bash.command("bash", startScript.toString(), CLUSTER_NAME, CASSANDRA_VERSION, String.valueOf(CASSANDRA_NODES));
+        Process p = bash
+                .redirectErrorStream(true)
+                .start();
+        logProcess(p);
+
+        //Stop node1
+        stopTestNode();
+    }
+
+    private void stopTestNode() throws IOException, InterruptedException {
         //Stop Node
-        List<String> command = new LinkedList<>();
-        command.add("su");
-        command.add(USER);
-        command.add("-c");
-        command.add(String.format("ccm %s stop", TEST_NODE));
+        String[] command = new String[]{"ccm", TEST_NODE, "stop"};
         LOG.debug("Stopping {}", TEST_NODE);
         Process stopProcess = new ProcessBuilder(command)
                 .redirectErrorStream(true)
@@ -223,9 +218,8 @@ public class CassandraRunner implements ApplicationRunner {
         stopProcess.waitFor();
 
         //Assert that node really shutdown
-        String[] isUpCommand = new String[]{"su", USER, "-c", "ccm status"};
+        String[] isUpCommand = new String[]{"ccm", "status"};
         Process process = new ProcessBuilder(isUpCommand)
-                .redirectErrorStream(true)
                 .start();
 
         List<String> output = new ArrayList<>();
@@ -237,10 +231,26 @@ public class CassandraRunner implements ApplicationRunner {
         }
 
         //Check if node is not running
-        boolean isDown = output.stream().anyMatch(str -> str.equals(TEST_NODE + ": DOWN"));
+        boolean isDown = output.stream().anyMatch(str -> str.contains(TEST_NODE + ": DOWN"));
         if (!isDown) {
             LOG.error("Received: {}", output);
-            throw new RuntimeException(String.format("Node %s is still running which should not be allowed", TEST_NODE));
+            throw new RuntimeException(String.format("Node %s is still running which should not be allowed",
+                    TEST_NODE));
+        }
+    }
+
+    private void logProcess(Process process) throws IOException {
+        String output = IOUtils.toString(process.getInputStream(), Charset.defaultCharset());
+        String errorOutput = IOUtils.toString(process.getErrorStream(), Charset.defaultCharset());
+        if (!output.isEmpty()) {
+            Arrays.stream(output.split("\n"))
+                    .filter(a -> !a.isEmpty())
+                    .forEach(LOG::info);
+        }
+        if (!errorOutput.isEmpty()) {
+            Arrays.stream(errorOutput.split("\n"))
+                    .filter(a -> !a.isEmpty())
+                    .forEach(LOG::info);
         }
     }
 }

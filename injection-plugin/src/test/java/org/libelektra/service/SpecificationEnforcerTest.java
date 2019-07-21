@@ -33,7 +33,7 @@ public class SpecificationEnforcerTest {
     @Before
     public void setUp() {
         InjectionConfiguration injectionConfiguration =
-                new InjectionConfiguration(true,
+                new InjectionConfiguration(
                         "",
                         parentPath,
                         specPath,

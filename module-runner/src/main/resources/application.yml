@@ -7,7 +7,7 @@ logging:
     org.libelektra.errortypes: INFO
 
 mountpoint:
-    config: "system/lcdproc"
+    config: "system/lyrebird"
     specification: "system/spec"
     inject: "system/inject"
 
@@ -15,7 +15,6 @@ injection:
   iterations: 150
   run-config-location: "/tmp/lcdd-tmp.conf"
   timeout: 300
-  with-specification: true
   seed: 19
 
 special.injections: "special-configurations/lcdproc"
@@ -24,7 +23,8 @@ outputpath: "/home/wespe/Desktop"
 spring:
   profiles:
    active:
-    - lcdproc
+#    - lcdproc
+    - cassandra
 #    - manual
     - all
 #    - domain

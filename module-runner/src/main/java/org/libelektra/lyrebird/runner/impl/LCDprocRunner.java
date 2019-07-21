@@ -23,8 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.libelektra.lyrebird.model.LogEntry.RESULT_TYPE.SPECIFICATION_CAUGHT;
-
 @Component
 @Profile("lcdproc")
 public class LCDprocRunner implements ApplicationRunner {
@@ -112,15 +110,9 @@ public class LCDprocRunner implements ApplicationRunner {
         KeySet configKeySet = kdbService.getKeySetBelowPath(injectionConfiguration.getParentPath());
         InjectionDataResult injectionDataResult = injectionPlugin.kdbSet(configKeySet, injectKey, path);
         currentLogEntry.setInjectionDataResult(injectionDataResult);
-        if (injectionConfiguration.isWithSpecification()) {
-            this.specificationDataResult = specificationEnforcer.checkSpecification(specificationKeySet,
-                    configKeySet, injectKey);
-            currentLogEntry.setSpecificationDataResult(this.specificationDataResult);
-            if (this.specificationDataResult.hasDetectedError()) {
-                currentLogEntry.setErrorLogEntry(this.specificationDataResult.getErrorMessage());
-                currentLogEntry.setResultType(SPECIFICATION_CAUGHT);
-            }
-        }
+        this.specificationDataResult = specificationEnforcer.checkSpecification(specificationKeySet,
+                configKeySet, injectKey);
+        currentLogEntry.setSpecificationDataResult(this.specificationDataResult);
         injectAdditionalContextDependant(configKeySet, injectionDataResult);
         return new InjectionResult(injectionDataResult, specificationDataResult);
     }
