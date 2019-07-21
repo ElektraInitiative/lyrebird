@@ -7,10 +7,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class InjectionConfiguration {
 
-    private final String tmpRunConfig;
-    private final String parentPath;
-    private final String specPath;
-    private final String injectPath;
+    private String tmpRunConfig;
+    private String parentPath;
+    private String specPath;
+    private String injectPath;
 
     public InjectionConfiguration(
             @Value("${injection.run-config-location}") String tmpRunConfig,
@@ -31,11 +31,27 @@ public class InjectionConfiguration {
         return specPath;
     }
 
-    public String getTmpRunConfig() {
+    public String getRunConfig() {
         return tmpRunConfig;
     }
 
     public String getInjectPath() {
         return injectPath;
+    }
+
+    public void setRunConfig(String tmpRunConfig) {
+        this.tmpRunConfig = tmpRunConfig;
+    }
+
+    public void setParentPath(String parentPath) {
+        this.parentPath = parentPath;
+    }
+
+    public void setSpecPath(String specPath) {
+        this.specPath = specPath;
+    }
+
+    public void setInjectPath(String injectPath) {
+        this.injectPath = injectPath;
     }
 }

@@ -283,7 +283,7 @@ public class TypoError extends AbstractErrorType {
 
     private Key getValueOrDefault(KeySet set, String injectPath, String defaultValue) {
         Key lookup = set.lookup(injectPath);
-        if (lookup.isNull()) {
+        if (lookup.isNull() || lookup.getString().isEmpty() || lookup.getString().equals("0") || lookup.getString().equals("1")) {
             return Key.create(injectPath, defaultValue);
         }
         return lookup;

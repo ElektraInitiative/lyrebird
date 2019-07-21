@@ -39,7 +39,7 @@ public class CassandraRunner implements ApplicationRunner {
     private static final String CLUSTER_NAME = "LyreBirdCluster";
     private static final String TEST_NODE = "node1";
     private static final String LOG_LOCATION =
-            String.format("/home/%s/.ccm/%s/%s/logs/system.log", USER, TEST_NODE, CLUSTER_NAME);
+            String.format("/home/%s/.ccm/%s/%s/logs/system.log", USER, CLUSTER_NAME, TEST_NODE);
 
     private KDBService kdbService;
     private RandomizerService randomizerService;
@@ -81,7 +81,7 @@ public class CassandraRunner implements ApplicationRunner {
             File errorConfigFile = new File(classLoader.getResource(CASSANDRA_INJECT_CONFIG).getFile());
             File specConfigFile = new File(classLoader.getResource(CASSANDRA_SPEC_CONFIG).getFile());
             //TODO: Filter for settings with numbers
-            File runConfig = new File(NODE1_RUN_CONFIG);
+            File runConfig = new File(injectionConfiguration.getRunConfig());
             initialConfigFileCopy = new File("/tmp/cassandra-run-copy.yml");
             FileUtils.copyFile(runConfig, initialConfigFileCopy);
             File specConfig = new File(TEMP_SPEC_CONFIG);
@@ -147,12 +147,10 @@ public class CassandraRunner implements ApplicationRunner {
             }
             Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getParentPath()));
             kdbService.close();
-            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-            File initialConfigFile = new File(classLoader.getResource(NODE1_RUN_CONFIG).getFile());
-            File runConfig = new File(injectionConfiguration.getTmpRunConfig());
+            File runConfig = new File(injectionConfiguration.getRunConfig());
             FileUtils.deleteQuietly(runConfig);
-            FileUtils.copyFile(initialConfigFile, runConfig);
-            Util.executeCommand(String.format("kdb mount %s %s ini", injectionConfiguration.getTmpRunConfig(), injectionConfiguration.getParentPath()));
+            FileUtils.copyFile(initialConfigFileCopy, runConfig);
+            Util.executeCommand(String.format("kdb mount %s %s yamlcpp", injectionConfiguration.getRunConfig(), injectionConfiguration.getParentPath()));
             kdbService.initKDB();
             this.currentLogEntry = new LogEntry();
         } catch (NullPointerException e) {
@@ -181,17 +179,18 @@ public class CassandraRunner implements ApplicationRunner {
 
     @Override
     public void cleanUp() throws IOException {
+        LOG.info("Cleaning up");
         Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getParentPath()));
         Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getInjectPath()));
         Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getSpecPath()));
 
         //Set old config file and delete saved copy
-        FileUtils.copyFile(initialConfigFileCopy, new File(NODE1_RUN_CONFIG));
+        FileUtils.copyFile(initialConfigFileCopy, new File(injectionConfiguration.getRunConfig()));
         FileUtils.deleteQuietly(initialConfigFileCopy);
 
         FileUtils.deleteQuietly(new File(TEMP_SPEC_CONFIG));
 
-        FileUtils.deleteQuietly(new File(injectionConfiguration.getTmpRunConfig()));
+        FileUtils.deleteQuietly(new File(injectionConfiguration.getRunConfig()));
     }
 
     private void startClusterIfNotUp() throws IOException, InterruptedException {

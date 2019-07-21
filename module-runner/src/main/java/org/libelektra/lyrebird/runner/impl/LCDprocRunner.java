@@ -87,7 +87,7 @@ public class LCDprocRunner implements ApplicationRunner {
     @Override
     public void start() throws IOException {
 //        String[] command = (new String[]{"gnome-terminal", "-e", String.format("LCDd -f -c %s", tmpRunConfig)});
-        String[] command = new String[]{"LCDd", "-f", "-c", injectionConfiguration.getTmpRunConfig()};
+        String[] command = new String[]{"LCDd", "-f", "-c", injectionConfiguration.getRunConfig()};
 
         process = new ProcessBuilder(command)
                 .start();
@@ -149,10 +149,10 @@ public class LCDprocRunner implements ApplicationRunner {
             kdbService.close();
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             File initialConfigFile = new File(classLoader.getResource(LCDSERVER_RUN_CONFIG).getFile());
-            File runConfig = new File(injectionConfiguration.getTmpRunConfig());
+            File runConfig = new File(injectionConfiguration.getRunConfig());
             FileUtils.deleteQuietly(runConfig);
             FileUtils.copyFile(initialConfigFile, runConfig);
-            Util.executeCommand(String.format("kdb mount %s %s ini", injectionConfiguration.getTmpRunConfig(), injectionConfiguration.getParentPath()));
+            Util.executeCommand(String.format("kdb mount %s %s ini", injectionConfiguration.getRunConfig(), injectionConfiguration.getParentPath()));
             kdbService.initKDB();
             this.currentLogEntry = new LogEntry();
         } catch (NullPointerException e) {
@@ -207,7 +207,7 @@ public class LCDprocRunner implements ApplicationRunner {
         Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getParentPath()));
         Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getInjectPath()));
         Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getSpecPath()));
-        FileUtils.deleteQuietly(new File(injectionConfiguration.getTmpRunConfig()));
+        FileUtils.deleteQuietly(new File(injectionConfiguration.getRunConfig()));
         FileUtils.deleteQuietly(new File(TEMP_ERROR_CONFIG));
         FileUtils.deleteQuietly(new File(TEMP_SPEC_CONFIG));
     }

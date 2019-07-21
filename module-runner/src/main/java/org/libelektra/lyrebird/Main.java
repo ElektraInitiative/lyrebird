@@ -72,11 +72,6 @@ public class Main implements CommandLineRunner {
         for (int i = 0; i < iterations; i++) {
             runner.resetConfiguration();
             InjectionResult injectionResult = runner.injectInConfiguration();
-            if (injectionResult.errorCaughtBySpecification()) {
-                // No need to run the program if the specification caught the error
-                allLogs.add(runner.getLogEntry());
-                continue;
-            }
             if (!injectionResult.wasInjectionSuccessful()) {
                 // Case toggling a number for example is impossible and yields false as result
                 i--;
