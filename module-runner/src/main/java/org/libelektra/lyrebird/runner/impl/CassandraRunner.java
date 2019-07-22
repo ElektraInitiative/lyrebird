@@ -33,7 +33,7 @@ public class CassandraRunner implements ApplicationRunner {
 
     private final static Logger LOG = LoggerFactory.getLogger(CassandraRunner.class);
 
-    private static final String USER = "wespe";
+    private static final String USER = System.getProperty("user.name");
     private static final String CASSANDRA_VERSION = "3.11.4";
     private static final int CASSANDRA_NODES = 3;
     private static final String CLUSTER_NAME = "LyreBirdCluster";
@@ -109,6 +109,7 @@ public class CassandraRunner implements ApplicationRunner {
         Process process = new ProcessBuilder(command)
                 .redirectErrorStream(true)
                 .start();
+        //TODO: log process error stream additionally
         tailerListener = new LogListenerService();
         File file = new File(LOG_LOCATION);
         tailer = Tailer.create(file, tailerListener);
@@ -164,7 +165,6 @@ public class CassandraRunner implements ApplicationRunner {
     }
 
     private void handleLogs(List<String> logs) {
-        currentLogEntry = new LogEntry();
         List<String> errorLogs = logs.stream().filter(str -> str.contains("ERROR")).collect(Collectors.toList());
         if (errorLogs.size() > 0) {
             currentLogEntry.setResultType(LogEntry.RESULT_TYPE.ERROR);
@@ -174,7 +174,6 @@ public class CassandraRunner implements ApplicationRunner {
 
         //TODO!
 //        currentLogEntry.setErrorType("UNDEFINED YET");
-//        currentLogEntry.setInjectedError("UNDEFINED YET");
     }
 
     @Override
