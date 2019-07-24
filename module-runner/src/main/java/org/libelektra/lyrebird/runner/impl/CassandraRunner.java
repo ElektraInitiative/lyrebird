@@ -61,7 +61,7 @@ public class CassandraRunner implements ApplicationRunner {
 
     private Tailer tailer;
     private LogListenerService tailerListener;
-    private File initialConfigFileCopy;
+    private final File initConfig;
 
     @Autowired
     public CassandraRunner(KDBService kdbService,
@@ -75,15 +75,13 @@ public class CassandraRunner implements ApplicationRunner {
         this.injectionPlugin = injectionPlugin;
         this.kdbService = kdbService;
         this.randomizerService = randomizerService;
+        initConfig = Util.getResourceFile("cassandra/cassandra_ccm.yaml");
         try {
             startClusterIfNotUp();
-            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-            File errorConfigFile = new File(classLoader.getResource(CASSANDRA_INJECT_CONFIG).getFile());
-            File specConfigFile = new File(classLoader.getResource(CASSANDRA_SPEC_CONFIG).getFile());
+            File errorConfigFile = Util.getResourceFile(CASSANDRA_INJECT_CONFIG);
+            File specConfigFile = Util.getResourceFile(CASSANDRA_SPEC_CONFIG);
             //TODO: Filter for settings with numbers
-            File runConfig = new File(injectionConfiguration.getRunConfig());
-            initialConfigFileCopy = new File("/tmp/cassandra-run-copy.yml");
-            FileUtils.copyFile(runConfig, initialConfigFileCopy);
+            FileUtils.copyFile(initConfig, new File(injectionConfiguration.getRunConfig()));
             File specConfig = new File(TEMP_SPEC_CONFIG);
             FileUtils.copyFile(errorConfigFile, new File(TEMP_ERROR_CONFIG));
             FileUtils.copyFile(specConfigFile, specConfig);
@@ -92,8 +90,6 @@ public class CassandraRunner implements ApplicationRunner {
                     injectionConfiguration.getInjectPath()));
             Util.executeCommand(String.format("kdb mount %s %s ni", TEMP_SPEC_CONFIG,
                     injectionConfiguration.getSpecPath()));
-        } catch (NullPointerException e) {
-            LOG.error("Could not find configuration for {}", CASSANDRA_RUN_CONFIG);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -106,13 +102,14 @@ public class CassandraRunner implements ApplicationRunner {
     public void start() throws IOException {
         String[] command = new String[]{"ccm", TEST_NODE, "start"};
         LOG.debug("Starting {}", TEST_NODE);
+        File file = new File(LOG_LOCATION);
+        tailerListener = new LogListenerService();
+        tailer = Tailer.create(file, tailerListener);
         Process process = new ProcessBuilder(command)
                 .redirectErrorStream(true)
                 .start();
+        logProcess(process);
         //TODO: log process error stream additionally
-        tailerListener = new LogListenerService();
-        File file = new File(LOG_LOCATION);
-        tailer = Tailer.create(file, tailerListener);
     }
 
     @Override
@@ -150,7 +147,7 @@ public class CassandraRunner implements ApplicationRunner {
             kdbService.close();
             File runConfig = new File(injectionConfiguration.getRunConfig());
             FileUtils.deleteQuietly(runConfig);
-            FileUtils.copyFile(initialConfigFileCopy, runConfig);
+            FileUtils.copyFile(initConfig, runConfig);
             Util.executeCommand(String.format("kdb mount %s %s yamlcpp", injectionConfiguration.getRunConfig(), injectionConfiguration.getParentPath()));
             kdbService.initKDB();
             this.currentLogEntry = new LogEntry();
@@ -184,17 +181,14 @@ public class CassandraRunner implements ApplicationRunner {
         Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getSpecPath()));
 
         //Set old config file and delete saved copy
-        FileUtils.copyFile(initialConfigFileCopy, new File(injectionConfiguration.getRunConfig()));
-        FileUtils.deleteQuietly(initialConfigFileCopy);
+        FileUtils.copyFile(initConfig, new File(injectionConfiguration.getRunConfig()));
 
         FileUtils.deleteQuietly(new File(TEMP_SPEC_CONFIG));
-
-        FileUtils.deleteQuietly(new File(injectionConfiguration.getRunConfig()));
+        FileUtils.deleteQuietly(new File(TEMP_ERROR_CONFIG));
     }
 
     private void startClusterIfNotUp() throws IOException, InterruptedException {
-        ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-        File startScript = new File(classLoader.getResource("cassandra/startCluster.sh").getFile());
+        File startScript = Util.getResourceFile("cassandra/startCluster.sh");
         ProcessBuilder bash = new ProcessBuilder();
         bash.command("bash", startScript.toString(), CLUSTER_NAME, CASSANDRA_VERSION, String.valueOf(CASSANDRA_NODES));
         Process p = bash

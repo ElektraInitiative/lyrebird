@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Iterator;
@@ -11,6 +12,8 @@ import java.util.Iterator;
 import static org.libelektra.InjectionPlugin.ROOT_KEY;
 
 public class Util {
+
+    private static ClassLoader classLoader = ClassLoader.getSystemClassLoader();
 
     private final static Logger LOG = LoggerFactory.getLogger(Util.class);
 
@@ -39,6 +42,10 @@ public class Util {
         if (err) {
             LOG.error("Failed command: '{}'\n{}", command, errors.toString());
         }
+    }
+
+    public static File getResourceFile(String path) {
+        return new File(classLoader.getResource(path).getFile());
     }
 
     static void cleanUp(KeySet loadedKeySet, KDB kdb) throws KDB.KDBException {
