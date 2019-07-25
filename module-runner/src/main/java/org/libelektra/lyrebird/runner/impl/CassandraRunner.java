@@ -100,15 +100,27 @@ public class CassandraRunner implements ApplicationRunner {
 
     @Override
     public void start() throws IOException {
-        String[] command = new String[]{"ccm", TEST_NODE, "start"};
         LOG.debug("Starting {}", TEST_NODE);
         File file = new File(LOG_LOCATION);
         tailerListener = new LogListenerService();
         tailer = Tailer.create(file, tailerListener);
-        Process process = new ProcessBuilder(command)
+        File startScript = Util.getResourceFile("cassandra/startNode.sh");
+        ProcessBuilder bash = new ProcessBuilder();
+        bash.command("bash", startScript.toString(), TEST_NODE);
+        Process p = bash
                 .redirectErrorStream(true)
                 .start();
-        logProcess(process);
+        logProcess(p);
+
+//        String[] command = new String[]{"ccm", TEST_NODE, "start"};
+//        LOG.debug("Starting {}", TEST_NODE);
+//        File file = new File(LOG_LOCATION);
+//        tailerListener = new LogListenerService();
+//        tailer = Tailer.create(file, tailerListener);
+//        Process process = new ProcessBuilder(command)
+//                .redirectErrorStream(true)
+//                .start();
+//        logProcess(process);
         //TODO: log process error stream additionally
     }
 
