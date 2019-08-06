@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.libelektra.*;
 import org.libelektra.lyrebird.model.LogEntry;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
+import org.libelektra.lyrebird.service.InjectionFilterService;
 import org.libelektra.model.InjectionConfiguration;
 import org.libelektra.model.InjectionDataResult;
 import org.libelektra.model.InjectionResult;
@@ -54,8 +55,8 @@ public class LCDprocRunner implements ApplicationRunner {
                          RandomizerService randomizerService,
                          SpecificationEnforcer specificationEnforcer,
                          InjectionPlugin injectionPlugin,
-                         InjectionConfiguration injectionConfiguration
-    ) throws KDB.KDBException {
+                         InjectionConfiguration injectionConfiguration,
+                         InjectionFilterService injectionFilterService) throws KDB.KDBException {
         this.injectionConfiguration = injectionConfiguration;
         this.specificationEnforcer = specificationEnforcer;
         this.injectionPlugin = injectionPlugin;
@@ -65,7 +66,6 @@ public class LCDprocRunner implements ApplicationRunner {
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             File errorConfigFile = new File(classLoader.getResource(LCDSERVER_INJECT_CONFIG).getFile());
             File specConfigFile = new File(classLoader.getResource(LCDSERVER_SPEC_CONFIG).getFile());
-            //TODO: Filter for settings with numbers
             File runConfig = new File(TEMP_ERROR_CONFIG);
             File specConfig = new File(TEMP_SPEC_CONFIG);
             FileUtils.copyFile(errorConfigFile, runConfig);
@@ -80,13 +80,13 @@ public class LCDprocRunner implements ApplicationRunner {
         }
         kdbService.initKDB();
         errorConfigKeySet = kdbService.getKeySetBelowPath(injectionConfiguration.getInjectPath());
+        injectionFilterService.filter(errorConfigKeySet);
         specificationKeySet = kdbService.getKeySetBelowPath(injectionConfiguration.getSpecPath());
     }
 
 
     @Override
     public void start() throws IOException {
-//        String[] command = (new String[]{"gnome-terminal", "-e", String.format("LCDd -f -c %s", tmpRunConfig)});
         String[] command = new String[]{"LCDd", "-f", "-c", injectionConfiguration.getRunConfig()};
 
         process = new ProcessBuilder(command)

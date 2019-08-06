@@ -6,6 +6,7 @@ import org.apache.commons.io.input.Tailer;
 import org.libelektra.*;
 import org.libelektra.lyrebird.model.LogEntry;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
+import org.libelektra.lyrebird.service.InjectionFilterService;
 import org.libelektra.lyrebird.service.LogListenerService;
 import org.libelektra.model.InjectionConfiguration;
 import org.libelektra.model.InjectionDataResult;
@@ -68,8 +69,8 @@ public class CassandraRunner implements ApplicationRunner {
                            RandomizerService randomizerService,
                            SpecificationEnforcer specificationEnforcer,
                            InjectionPlugin injectionPlugin,
-                           InjectionConfiguration injectionConfiguration
-    ) throws KDB.KDBException, InterruptedException {
+                           InjectionConfiguration injectionConfiguration,
+                           InjectionFilterService injectionFilterService) throws KDB.KDBException, InterruptedException {
         this.injectionConfiguration = injectionConfiguration;
         this.specificationEnforcer = specificationEnforcer;
         this.injectionPlugin = injectionPlugin;
@@ -95,6 +96,7 @@ public class CassandraRunner implements ApplicationRunner {
         }
         kdbService.initKDB();
         errorConfigKeySet = kdbService.getKeySetBelowPath(injectionConfiguration.getInjectPath());
+        injectionFilterService.filter(errorConfigKeySet);
         specificationKeySet = kdbService.getKeySetBelowPath(injectionConfiguration.getSpecPath());
     }
 
