@@ -4,6 +4,8 @@ import org.libelektra.InjectionMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
+
 public class InjectionDataResult {
 
     private final static Logger LOG = LoggerFactory.getLogger(InjectionDataResult.class);
@@ -43,6 +45,22 @@ public class InjectionDataResult {
 
     public InjectionMeta getInjectionMeta() {
         return injectionMeta;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InjectionDataResult that = (InjectionDataResult) o;
+        return oldValue.equals(that.oldValue) &&
+                newValue.equals(that.newValue) &&
+                key.equals(that.key) &&
+                injectionMeta.equals(that.injectionMeta);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(oldValue, newValue, key, injectionMeta);
     }
 
     @Override

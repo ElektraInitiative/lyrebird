@@ -3,6 +3,8 @@ package org.libelektra.lyrebird.model;
 import org.libelektra.model.InjectionDataResult;
 import org.libelektra.model.SpecificationDataResult;
 
+import java.util.Objects;
+
 import static org.libelektra.lyrebird.model.LogEntry.RESULT_TYPE.NONE;
 
 public class LogEntry {
@@ -80,10 +82,22 @@ public class LogEntry {
     }
 
     public static enum RESULT_TYPE {
-        SPECIFICATION_CAUGHT,
         ERROR,
         SUCCESS,
         NONE;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LogEntry logEntry = (LogEntry) o;
+        return injectionDataResult.equals(logEntry.injectionDataResult);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(injectionDataResult);
     }
 }
 
