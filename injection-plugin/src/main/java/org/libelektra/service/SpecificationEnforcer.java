@@ -38,7 +38,12 @@ public class SpecificationEnforcer {
     public SpecificationDataResult checkSpecification(KeySet specification, KeySet configKeys, Key changedKey) {
         Key correspondingSpecKey = specification.lookup(changedKey.getName().replace(injectionConfiguration.getInjectPath(), injectionConfiguration.getSpecPath()).toLowerCase());
         Key correspondingConfigKey = configKeys.lookup(changedKey.getName().replace(injectionConfiguration.getInjectPath(), injectionConfiguration.getParentPath())).dup();
-        correspondingConfigKey.setBaseName("system/temporarySpec");
+        if (correspondingConfigKey.isNull()) {
+            correspondingConfigKey = Key.create(changedKey.getName().replace(injectionConfiguration.getInjectPath(),
+                    "system/temporarySpec"));
+        } else {
+            correspondingConfigKey.setBaseName("system/temporarySpec");
+        }
         correspondingConfigKey.copyAllMeta(correspondingSpecKey);
         for (Plugin specPlugin : allPlugins) {
             // Bug in Elektra?

@@ -44,6 +44,7 @@ public class LCDprocRunner implements ApplicationRunner {
     public final static String LCDSERVER_SPEC_CONFIG = "lcdproc/LCDd-spec.ini";
     public final static String TEMP_ERROR_CONFIG = "/tmp/lcdd-inject.conf";
     public final static String TEMP_SPEC_CONFIG = "/tmp/lcdd-spec.conf";
+    public final static String FAKE_DRIVER = "/tmp/fakeDriver";
 
     private final InjectionPlugin injectionPlugin;
     private KeySet errorConfigKeySet;
@@ -63,9 +64,8 @@ public class LCDprocRunner implements ApplicationRunner {
         this.kdbService = kdbService;
         this.randomizerService = randomizerService;
         try {
-            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-            File errorConfigFile = new File(classLoader.getResource(LCDSERVER_INJECT_CONFIG).getFile());
-            File specConfigFile = new File(classLoader.getResource(LCDSERVER_SPEC_CONFIG).getFile());
+            File errorConfigFile = Util.getResourceFile(LCDSERVER_INJECT_CONFIG);
+            File specConfigFile = Util.getResourceFile(LCDSERVER_SPEC_CONFIG);
             File runConfig = new File(TEMP_ERROR_CONFIG);
             File specConfig = new File(TEMP_SPEC_CONFIG);
             FileUtils.copyFile(errorConfigFile, runConfig);
@@ -147,13 +147,15 @@ public class LCDprocRunner implements ApplicationRunner {
         try {
             Util.executeCommand(String.format("kdb umount %s", injectionConfiguration.getParentPath()));
             kdbService.close();
-            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-            File initialConfigFile = new File(classLoader.getResource(LCDSERVER_RUN_CONFIG).getFile());
+            File fakeDriver = new File(FAKE_DRIVER);
+            FileUtils.deleteQuietly(fakeDriver);
+            File initialConfigFile = Util.getResourceFile(LCDSERVER_RUN_CONFIG);
             File runConfig = new File(injectionConfiguration.getRunConfig());
             FileUtils.deleteQuietly(runConfig);
             FileUtils.copyFile(initialConfigFile, runConfig);
             Util.executeCommand(String.format("kdb mount %s %s ini", injectionConfiguration.getRunConfig(), injectionConfiguration.getParentPath()));
             kdbService.initKDB();
+            fakeDriver.createNewFile();
             this.currentLogEntry = new LogEntry();
         } catch (NullPointerException e) {
             LOG.error("Could not find configuration for {}", LCDSERVER_RUN_CONFIG);

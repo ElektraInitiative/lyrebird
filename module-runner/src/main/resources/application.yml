@@ -12,9 +12,9 @@ mountpoint:
     inject: "system/inject"
 
 injection:
-  iterations: 5
-#  run-config-location: "/tmp/lcdd-tmp.conf"
-  run-config-location: "/home/wespe/.ccm/LyreBirdCluster/node1/conf/cassandra.yaml"
+  iterations: 500
+  run-config-location: "/tmp/lcdd-tmp.conf"
+#  run-config-location: "/home/wespe/.ccm/LyreBirdCluster/node1/conf/cassandra.yaml"
   timeout: 300
   seed: 19
 
@@ -24,8 +24,8 @@ outputpath: "/home/wespe/Desktop"
 spring:
   profiles:
    active:
-#    - lcdproc
-    - cassandra
+    - lcdproc
+#    - cassandra
 #    - manual
     - all
 #    - domain
