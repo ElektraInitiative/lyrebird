@@ -77,21 +77,25 @@ public class TypoError extends AbstractErrorType {
             this.injectionDataResult = new InjectionDataResult.Builder(false).build();
             return set;
         }
+        String newValue = "";
+        int loopIteration = 0;
+        do {
+            int charPosition = randomizerService.getNextInt(value.length());
+            int otherPosition = randomizerService.getNextInt(value.length());
 
-        int charPosition = randomizerService.getNextInt(value.length());
-        int otherPosition = randomizerService.getNextInt(value.length());
+            //search for another position. Single character strings are excluded already
+            while (otherPosition == charPosition) {
+                otherPosition = randomizerService.getNextInt(value.length());
+            }
 
-        //search for another position. Single character strings are excluded already
-        while (otherPosition == charPosition) {
-            otherPosition = randomizerService.getNextInt(value.length());
-        }
-
-        StringBuilder sb = new StringBuilder(value);
-        char char1 = value.charAt(charPosition);
-        char char2 = value.charAt(otherPosition);
-        sb.setCharAt(charPosition, char2);
-        sb.setCharAt(otherPosition, char1);
-        String newValue = sb.toString();
+            StringBuilder sb = new StringBuilder(value);
+            char char1 = value.charAt(charPosition);
+            char char2 = value.charAt(otherPosition);
+            sb.setCharAt(charPosition, char2);
+            sb.setCharAt(otherPosition, char1);
+            newValue = sb.toString();
+            loopIteration++;
+        } while (value.equals(newValue) && loopIteration < 5);
         keyToChange.setString(newValue);
 
         this.injectionDataResult = new InjectionDataResult.Builder(true)
@@ -152,8 +156,12 @@ public class TypoError extends AbstractErrorType {
         Key keyToChange = getValueOrDefault(set, injectPath, defaultValue);
         String value = keyToChange.getString();
 
-        char randomChar = availableInsertionCharacters[randomizerService.getNextInt(availableInsertionCharacters.length)];
         int position = randomizerService.getNextInt(value.length());
+        char currentChar = value.charAt(position);
+        char randomChar = availableInsertionCharacters[randomizerService.getNextInt(availableInsertionCharacters.length)];
+        while (randomChar == currentChar) {
+            randomChar = availableInsertionCharacters[randomizerService.getNextInt(availableInsertionCharacters.length)];
+        }
 
         StringBuilder sb = new StringBuilder(value);
         sb.setCharAt(position, randomChar);
@@ -192,7 +200,7 @@ public class TypoError extends AbstractErrorType {
         String newString = sb.toString();
         this.injectionDataResult = new InjectionDataResult.Builder(true)
                 .withOldValue(value)
-                .withNewValue(newString)
+                .withNewValue(String.format("'%s'", newString))
                 .withKey(keyToChange.getName())
                 .withInjectionMeta(Metadata.TYPO_SPACE)
                 .build();

@@ -53,7 +53,7 @@ public class SpecificationEnforcer {
             if (result < 1) {
                 String error = errorKey.getMeta("error/reason").getString();
                 List<String> warnings = extractWarnings();
-                LOG.info("(Specification caught - {})", specPlugin.getName());
+                LOG.debug("(Specification caught - {})", specPlugin.getName());
                 errorKey.release();
                 errorKey = Key.create("user/error");
                 return SpecificationDataResult.detectionResult(SpecPlugins.valueOf(specPlugin.getName().toUpperCase()),
@@ -78,12 +78,12 @@ public class SpecificationEnforcer {
     }
 
     public enum SpecPlugins {
-        TYPE("type"),
         PATH("path"),
         NETWORK("network"),
         RANGE("range"),
 //        REFERENCE("reference"),
 //        CONDITIONALS("conditionals"),
+        TYPE("type"),
         VALIDATION("validation");
 
         private final String pluginName;

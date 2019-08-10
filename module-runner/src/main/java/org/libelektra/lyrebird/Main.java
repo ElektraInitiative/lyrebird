@@ -1,5 +1,6 @@
 package org.libelektra.lyrebird;
 
+import com.sun.net.httpserver.HttpServer;
 import org.libelektra.KeySet;
 import org.libelektra.lyrebird.model.LogEntry;
 import org.libelektra.lyrebird.runner.ApplicationRunner;
@@ -16,6 +17,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -64,6 +66,11 @@ public class Main implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        int port = 8080;
+        LOG.info("Starting server on port {} to occupy port", port);
+        HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+        server.setExecutor(null); // creates a default executor
+        server.start();
         boolean manualInjectionsActive = Arrays.asList(env.getActiveProfiles()).contains("manual");
         if (manualInjectionsActive) {
             runManualInjections();
@@ -82,6 +89,8 @@ public class Main implements CommandLineRunner {
             allLogs.add(runner.getLogEntry());
         }
         outputWriter.write(allLogs);
+        LOG.info("Stopping server on port {}", port);
+        server.stop(0);
     }
 
     public static void main(String[] args) {

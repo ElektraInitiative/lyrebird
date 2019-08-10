@@ -31,6 +31,10 @@ public class SpecificationDataResult {
         return warnings;
     }
 
+    public String getPluginName() {
+        return plugin.getPluginName();
+    }
+
     public static SpecificationDataResult noDetectionResult() {
         SpecificationDataResult result = new SpecificationDataResult();
         result.hasDetectedError = false;

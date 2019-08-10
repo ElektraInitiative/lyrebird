@@ -1,5 +1,6 @@
 package org.libelektra.lyrebird.model;
 
+import org.libelektra.InjectionMeta;
 import org.libelektra.model.InjectionDataResult;
 import org.libelektra.model.SpecificationDataResult;
 
@@ -41,6 +42,10 @@ public class LogEntry {
 
     public void setErrorLogEntry(String errorLogEntry) {
         this.errorLogEntry = errorLogEntry;
+    }
+
+    public InjectionMeta getInjectionMeta() {
+        return injectionDataResult.getInjectionMeta();
     }
 
     public String getErrorLogEntry() {
