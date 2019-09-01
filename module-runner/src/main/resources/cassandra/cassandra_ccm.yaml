@@ -14,7 +14,7 @@ batch_size_warn_threshold_in_kb: 5
 batchlog_replay_throttle_in_kb: 1024
 cas_contention_timeout_in_ms: 1000
 cdc_enabled: false
-cdc_raw_directory: /home/michiz/.ccm/LyreBirdCluster/node1/cdc_raw
+cdc_raw_directory: /home/wespe/.ccm/LyreBirdCluster/node1/cdc_raw
 client_encryption_options:
   enabled: false
   keystore: conf/.keystore
@@ -24,7 +24,7 @@ cluster_name: LyreBirdCluster
 column_index_cache_size_in_kb: 2
 column_index_size_in_kb: 64
 commit_failure_policy: stop
-commitlog_directory: /home/michiz/.ccm/LyreBirdCluster/node1/commitlogs
+commitlog_directory: /home/wespe/.ccm/LyreBirdCluster/node1/commitlogs
 commitlog_segment_size_in_mb: 32
 commitlog_sync: periodic
 commitlog_sync_period_in_ms: 10000
@@ -40,7 +40,7 @@ counter_write_request_timeout_in_ms: 5000
 credentials_validity_in_ms: 2000
 cross_node_timeout: false
 data_file_directories:
-  - /home/michiz/.ccm/LyreBirdCluster/node1/data0
+  - /home/wespe/.ccm/LyreBirdCluster/node1/data0
 disk_failure_policy: stop
 dynamic_snitch_badness_threshold: 0.1
 dynamic_snitch_reset_interval_in_ms: 600000
@@ -52,7 +52,7 @@ endpoint_snitch: SimpleSnitch
 gc_warn_threshold_in_ms: 1000
 hinted_handoff_enabled: true
 hinted_handoff_throttle_in_kb: 1024
-hints_directory: /home/michiz/.ccm/LyreBirdCluster/node1/hints
+hints_directory: /home/wespe/.ccm/LyreBirdCluster/node1/hints
 hints_flush_period_in_ms: 10000
 incremental_backups: false
 index_summary_capacity_in_mb: null
@@ -84,7 +84,7 @@ rpc_address: 127.0.0.1
 rpc_keepalive: true
 rpc_port: 9160
 rpc_server_type: sync
-saved_caches_directory: /home/michiz/.ccm/LyreBirdCluster/node1/saved_caches
+saved_caches_directory: /home/wespe/.ccm/LyreBirdCluster/node1/saved_caches
 seed_provider:
   - class_name: org.apache.cassandra.locator.SimpleSeedProvider
     parameters:

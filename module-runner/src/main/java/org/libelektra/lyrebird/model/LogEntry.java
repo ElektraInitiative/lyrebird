@@ -89,7 +89,9 @@ public class LogEntry {
     public static enum RESULT_TYPE {
         ERROR,
         SUCCESS,
-        NONE;
+        NONE,
+        HANG,
+        NULL;
     }
 
     @Override

@@ -23,6 +23,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -218,10 +220,13 @@ public class CassandraRunner implements ApplicationRunner {
         //Stop Node
         String[] command = new String[]{"ccm", TEST_NODE, "stop"};
         LOG.debug("Stopping {}", TEST_NODE);
+        Instant start = Instant.now();
         Process stopProcess = new ProcessBuilder(command)
                 .redirectErrorStream(true)
                 .start();
+        logProcess(stopProcess);
         stopProcess.waitFor();
+        LOG.info("Stopped in {} sec", Duration.between(start, Instant.now()).toSeconds());
 
         //Assert that node really shutdown
         String[] isUpCommand = new String[]{"ccm", "status"};
@@ -251,12 +256,20 @@ public class CassandraRunner implements ApplicationRunner {
         if (!output.isEmpty()) {
             Arrays.stream(output.split("\n"))
                     .filter(a -> !a.isEmpty())
+                    .filter(this::filterSpamMessages)
                     .forEach(LOG::info);
         }
         if (!errorOutput.isEmpty()) {
             Arrays.stream(errorOutput.split("\n"))
                     .filter(a -> !a.isEmpty())
+                    .filter(this::filterSpamMessages)
                     .forEach(LOG::info);
         }
+    }
+
+    private boolean filterSpamMessages(String msg) {
+        return !msg.contains("YAMLLoadWarning: calling yaml.load()")
+                && !msg.contains("data = yaml.load(f)")
+                && !msg.contains(String.format("%s is not running", TEST_NODE));
     }
 }
