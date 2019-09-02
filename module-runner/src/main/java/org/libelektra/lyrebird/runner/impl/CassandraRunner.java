@@ -116,6 +116,7 @@ public class CassandraRunner implements ApplicationRunner {
                 .start();
         logProcess(p);
 
+
 //        String[] command = new String[]{"ccm", TEST_NODE, "start"};
 //        LOG.debug("Starting {}", TEST_NODE);
 //        File file = new File(LOG_LOCATION);
@@ -178,15 +179,48 @@ public class CassandraRunner implements ApplicationRunner {
     }
 
     private void handleLogs(List<String> logs) {
-        List<String> errorLogs = logs.stream().filter(str -> str.contains("ERROR")).collect(Collectors.toList());
+        logs = logs.stream()
+                .filter(this::filterCommonLogMessages)
+                .collect(Collectors.toList());
+        List<String> errorLogs = getErrorLogs(logs);
         if (errorLogs.size() > 0) {
             currentLogEntry.setResultType(LogEntry.RESULT_TYPE.ERROR);
         }
+
         currentLogEntry.setLogMessage(String.join("\n", logs));
         currentLogEntry.setErrorLogEntry(String.join("\n", errorLogs));
 
         //TODO!
 //        currentLogEntry.setErrorType("UNDEFINED YET");
+    }
+
+    private boolean filterCommonLogMessages(String message) {
+        return !message.contains("Config.java:496 - Node configuration:") &&
+                !message.contains("CassandraDaemon.java:491 - Classpath:") &&
+                !message.contains("ColumnFamilyStore.java:430 - Initializing") &&
+                !message.contains("CassandraDaemon.java:493 - JVM Arguments:") &&
+                !message.contains("Using Netty Version") &&
+                !message.matches("CacheService.java:\\d+ - Initializing");
+    }
+
+    private List<String> getErrorLogs(List<String> logs) {
+        List<String> errorLogs = new ArrayList<>();
+        boolean errorOccurred = false;
+        for (String line : logs) {
+            if (line.contains("ERROR")) {
+                errorOccurred = true;
+                errorLogs.add(line);
+            }
+            if (line.startsWith("\t") && errorOccurred) {
+                continue;
+            }
+            if (errorOccurred) {
+                errorLogs.add(line);
+            }
+        }
+        return errorLogs.stream()
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     @Override

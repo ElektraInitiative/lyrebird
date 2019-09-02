@@ -12,7 +12,7 @@ mountpoint:
     inject: "system/inject"
 
 injection:
-  iterations: 20
+  iterations: 10
 #  run-config-location: "/tmp/lcdd-tmp.conf"
   run-config-location: "/home/wespe/.ccm/LyreBirdCluster/node1/conf/cassandra.yaml"
   timeout: 15000
