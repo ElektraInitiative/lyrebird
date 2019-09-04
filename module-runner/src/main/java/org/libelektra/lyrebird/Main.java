@@ -78,7 +78,14 @@ public class Main implements CommandLineRunner {
         }
         for (int i = 0; i < iterations; i++) {
             runner.resetConfiguration();
-            InjectionResult injectionResult = runner.injectInConfiguration();
+            InjectionResult injectionResult = null;
+            try {
+                injectionResult = runner.injectInConfiguration();
+            } catch (Exception e) {
+                LOG.error("Could not inject!", e);
+                iterations--;
+                continue;
+            }
             if (!injectionResult.wasInjectionSuccessful()) {
                 // Case toggling a number for example is impossible and yields false as result
                 i--;

@@ -135,6 +135,11 @@ public class TypoError extends AbstractErrorType {
         Key keyToChange = getValueOrDefault(set, injectPath, defaultValue);
         String value = keyToChange.getString();
 
+        if (value.isEmpty()) {
+            this.injectionDataResult = new InjectionDataResult.Builder(false).build();
+            return set;
+        }
+
         String newString = new StringBuilder(value)
                 .deleteCharAt(randomizerService.getNextInt(value.length()))
                 .toString();
