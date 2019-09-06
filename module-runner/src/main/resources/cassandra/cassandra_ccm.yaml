@@ -57,7 +57,7 @@ hints_flush_period_in_ms: 10000
 incremental_backups: false
 index_summary_capacity_in_mb: null
 index_summary_resize_interval_in_minutes: 60
-initial_token: -9223372036854775808
+initial_token: 256
 inter_dc_tcp_nodelay: false
 internode_compression: dc
 key_cache_save_period: 14400

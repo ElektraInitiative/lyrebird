@@ -77,6 +77,7 @@ public class Main implements CommandLineRunner {
             return;
         }
         for (int i = 0; i < iterations; i++) {
+            LOG.info("==== Run: {} ====", i);
             runner.resetConfiguration();
             InjectionResult injectionResult = null;
             try {

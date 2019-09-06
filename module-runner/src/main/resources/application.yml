@@ -4,7 +4,7 @@ logging:
     org.libelektra: INFO
 #    org.libelektra.KeySet: DEBUG
     org.libelektra.Key: DEBUG
-    org.libelektra.errortypes: INFO
+    org.libelektra.errortypes: DEBUG
 
 mountpoint:
     config: "system/lyrebird"
